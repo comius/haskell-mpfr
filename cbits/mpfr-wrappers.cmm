@@ -300,11 +300,9 @@ MPFR_TEST(mpfr_cmm_inf_p, mpfr_inf_p)
 MPFR_TEST(mpfr_cmm_zero_p, mpfr_zero_p)
 
 #define MPFR_TAKE2_RET1(name,mpfr_fun)                               \
-name(W_ rnd, W_ ps1, W_ exp1, P_ limbs1, W_ ps2, W_ exp2, P_ limbs2) \
+name(W_ rnd, W_ prec, W_ ps1, W_ exp1, P_ limbs1, W_ ps2, W_ exp2, P_ limbs2) \
 {                                                                    \
-  W_ op1, op2, ret, prec, ps3;                                       \
-                                                                     \
-  prec = ps2 & ~(1 << PREC_SHIFT);                                   \
+  W_ op1, op2, ret, ps3;                                             \
                                                                      \
 again:                                                               \
   STK_CHK_GEN_N(3 * SIZEOF_MPFR);                                    \

@@ -64,7 +64,7 @@ a ... b
 
 infixl 6 +/-
 
-(+/-) :: Rounded r p -> Rounded r' p -> Interval p
+(+/-) :: Precision p => Rounded r p -> Rounded r' p -> Interval p
 a +/- b = (coerce a .-. coerce b) ... (coerce a .+. coerce b)
 
 negInfinity :: Fractional a => a
