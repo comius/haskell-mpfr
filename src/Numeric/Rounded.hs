@@ -73,6 +73,7 @@ mode# = case fromEnum (rounding (Proxy :: Proxy r)) of
   I# i# -> \_ -> i#
 
 type CSignPrec#  = Int#
+type CPrec#      = Int#
 type CPrecision# = Int#
 type CExp#       = Int#
 type CRounding#  = Int#
@@ -103,7 +104,7 @@ instance (Rounding r, Precision p) => Show (Rounded r p) where
 
 -- | N.B.: similar to Unary, assumes that output precision is same as precsion of _second_ operand
 type Binary
-  = CRounding# ->
+  = CRounding# -> CPrec# ->
     CSignPrec# -> CExp# -> ByteArray# ->
     CSignPrec# -> CExp# -> ByteArray# ->
     (# CSignPrec#, CExp#, ByteArray# #)
@@ -130,9 +131,9 @@ foreign import prim "mpfr_cmm_greaterequal_p"  mpfrGreaterEqual# :: Comparison
 cmp :: (CSignPrec# -> CExp# -> ByteArray# -> CSignPrec# -> CExp# -> ByteArray# -> Int#) -> Rounded r p -> Rounded r p -> Bool
 cmp f (Rounded s e l) (Rounded s' e' l') = I# (f s e l s' e' l') /= 0
 
-binary :: Rounding r => Binary -> Rounded r p -> Rounded r p -> Rounded r p
+binary :: (Rounding r, Precision p3) => Binary -> Rounded r p1 -> Rounded r p2 -> Rounded r p3
 binary f (Rounded s e l) (Rounded s' e' l') = r where
-  r = case f (mode# (proxyRounding r)) s e l s' e' l' of
+  r = case f (mode# (proxyRounding r)) (prec# (proxyPrecision r)) s e l s' e' l' of
     (# s'', e'', l'' #) -> Rounded s'' e'' l''
 
 instance Eq (Rounded r p) where
@@ -141,35 +142,35 @@ instance Eq (Rounded r p) where
 
 foreign import prim "mpfr_cmm_cmp" mpfrCmp# :: CSignPrec# -> CExp# -> ByteArray# -> CSignPrec# -> CExp# -> ByteArray# -> Int#
 
-instance Rounding r => Ord (Rounded r p) where
+instance Ord (Rounded r p) where
   compare (Rounded s e l) (Rounded s' e' l') = compare (fromIntegral (I# (mpfrCmp# s e l s' e' l'))) (0 :: Int32)
   (<=) = cmp mpfrLessEqual#
   (>=) = cmp mpfrGreaterEqual#
   (<) = cmp mpfrLess#
   (>) = cmp mpfrGreater#
   -- we shed the Rounding r dependency if we drop these, but give wrong answers on negative 0
-  min = binary mpfrMin#
-  max = binary mpfrMax#
+--  min = binary mpfrMin#
+--  max = binary mpfrMax#
 
 foreign import prim "mpfr_cmm_sgn" mpfrSgn# :: CSignPrec# -> CExp# -> ByteArray# -> Int#
 
 infixl 6 .+., .-.
 infixl 7 .*.
 
-(.+.) :: Rounding r => Rounded r p -> Rounded r p -> Rounded r p
+(.+.) :: (Rounding r, Precision p3) => Rounded r p1 -> Rounded r p2 -> Rounded r p3
 (.+.) = binary mpfrAdd#
 
-(.-.) :: Rounding r => Rounded r p -> Rounded r p -> Rounded r p
+(.-.) :: (Rounding r, Precision p3) => Rounded r p1 -> Rounded r p2 -> Rounded r p3
 (.-.) = binary mpfrSub#
 
-(.*.) :: Rounding r => Rounded r p -> Rounded r p -> Rounded r p
+(.*.) :: (Rounding r, Precision p3) => Rounded r p1 -> Rounded r p2 -> Rounded r p3
 (.*.) = binary mpfrMul#
 
 abs' :: Rounded r p -> Rounded r p
 abs' (Rounded s e l) = case I# s .&. complement prec_bit of
   I# s' -> Rounded s' e l
 
-negate' :: Rounding r => Rounded r p -> Rounded r p
+negate' :: (Rounding r, Precision p) => Rounded r p -> Rounded r p
 negate' = unary mpfrNeg#
 
 instance (Rounding r, Precision p) => Num (Rounded r p) where
@@ -248,7 +249,7 @@ fromDouble (D# d) = r where
 -- in the type, and since the precision is recorded in the type, this seems like a safe
 -- assumption, but perhaps someone might want to ask for a higher precision for output?
 type Unary
-  = CRounding# ->
+  = CRounding# -> CPrec# ->
     CSignPrec# -> CExp# -> ByteArray# ->
     (# CSignPrec#, CExp#, ByteArray# #)
 
@@ -268,10 +269,11 @@ foreign import prim "mpfr_cmm_tanh"  mpfrTanh#    :: Unary
 foreign import prim "mpfr_cmm_asinh" mpfrArcSinh# :: Unary
 foreign import prim "mpfr_cmm_acosh" mpfrArcCosh# :: Unary
 foreign import prim "mpfr_cmm_atanh" mpfrArcTanh# :: Unary
+foreign import prim "mpfr_cmm_set"   mpfrSet# :: Unary
 
-unary :: Rounding r => Unary -> Rounded r p -> Rounded r p
+unary :: (Rounding r, Precision p) => Unary -> Rounded r p -> Rounded r p
 unary f (Rounded s e l) = r where
-  r = case f (mode# (proxyRounding r)) s e l of
+  r = case f (mode# (proxyRounding r)) (prec# (proxyPrecision r)) s e l of
     (# s', e', l' #) -> Rounded s' e' l'
 {-# INLINE unary #-}
 

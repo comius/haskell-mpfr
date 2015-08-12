@@ -65,7 +65,7 @@ a ... b
 infixl 6 +/-
 
 (+/-) :: Precision p => Rounded r p -> Rounded r' p -> Interval p
-a +/- b = (coerce a .-. coerce b) ... (coerce a .+. coerce b)
+a +/- b = (coerce a - coerce b) ... (coerce a + coerce b)
 
 negInfinity :: Fractional a => a
 negInfinity = (-1)/0
@@ -249,7 +249,7 @@ mignitude = inf . abs
 --
 -- >>> symmetric 3
 -- -3 ... 3
-symmetric :: Rounded TowardInf p -> Interval p
+symmetric :: Precision p => Rounded TowardInf p -> Interval p
 symmetric b = coerce (negate' b) ... b
 
 -- | Hausdorff distance between intervals.

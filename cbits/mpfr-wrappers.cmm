@@ -352,11 +352,9 @@ MPFR_INPLACE(mpfr_cmm_nextabove, mpfr_nextabove)
 MPFR_INPLACE(mpfr_cmm_nextbelow, mpfr_nextbelow)
 
 #define MPFR_TAKE1_RET1(name,mpfr_fun)                            \
-name(W_ rnd, W_ ps, W_ exp, P_ limbs)                             \
+name(W_ rnd, W_ prec, W_ ps, W_ exp, P_ limbs)                    \
 {                                                                 \
-  W_ rnd, prec, op1, ret;                                         \
-                                                                  \
-  prec = ps & ~(1 << PREC_SHIFT);                                 \
+  W_ rnd, op1, ret;                                               \
                                                                   \
 again:                                                            \
   STK_CHK_GEN_N(2 * SIZEOF_MPFR);                                 \
@@ -389,6 +387,7 @@ MPFR_TAKE1_RET1(mpfr_cmm_tanh, mpfr_tanh)
 MPFR_TAKE1_RET1(mpfr_cmm_acosh, mpfr_acosh)
 MPFR_TAKE1_RET1(mpfr_cmm_asinh, mpfr_asinh)
 MPFR_TAKE1_RET1(mpfr_cmm_atanh, mpfr_atanh)
+MPFR_TAKE1_RET1(mpfr_cmm_set, mpfr_set)
 
 #define MPFR_CONSTANT(name,mpfr_constant)                        \
 name(W_ rnd, W_ prec)                                            \
