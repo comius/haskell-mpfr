@@ -43,6 +43,7 @@ module Numeric.Rounded
     , (.+.)
     , (.-.)
     , (.*.)
+    , normalize'
     , abs'
     , negate'
     , decodeFloat'
@@ -173,6 +174,9 @@ abs' (Rounded s e l) = case I# s .&. complement prec_bit of
 negate' :: (Rounding r, Precision p) => Rounded r p -> Rounded r p
 negate' = unary mpfrNeg#
 
+normalize' :: (Rounding r, Precision p2) => Rounded r p1 -> Rounded r p2
+normalize' = unary mpfrSet#
+
 instance (Rounding r, Precision p) => Num (Rounded r p) where
   (+) = binary mpfrAdd#
   (-) = binary mpfrSub#
@@ -271,7 +275,7 @@ foreign import prim "mpfr_cmm_acosh" mpfrArcCosh# :: Unary
 foreign import prim "mpfr_cmm_atanh" mpfrArcTanh# :: Unary
 foreign import prim "mpfr_cmm_set"   mpfrSet# :: Unary
 
-unary :: (Rounding r, Precision p) => Unary -> Rounded r p -> Rounded r p
+unary :: (Rounding r, Precision p2) => Unary -> Rounded r p1 -> Rounded r p2
 unary f (Rounded s e l) = r where
   r = case f (mode# (proxyRounding r)) (prec# (proxyPrecision r)) s e l of
     (# s', e', l' #) -> Rounded s' e' l'
