@@ -34,25 +34,17 @@ source-repository head
 
 library
   exposed-modules:
-    Numeric.Rounded
-    Numeric.Rounded.Interval
-
-  other-modules:
-    Numeric.Rounded.Rounding
-    Numeric.Rounded.Precision
+    Data.Number.Rounded
 
   build-depends:
     base             >= 4.7     && < 5,
     ghc-prim,
-    integer-gmp      >= 0.2   && < 0.6,
-    parallel,
-    reflection       >= 1.1.6 && < 1.5,
-    singletons       >= 0.9.3 && < 0.11,
-    tagged           >= 0.4.4 && < 0.8,
-    template-haskell >= 2.4   && < 2.10
+    integer-gmp      >= 0.2   && < 0.6
 
   ghc-options:     -Wall -O2 -fspec-constr -funbox-strict-fields
   c-sources:       cbits/mpfr-wrappers.cmm
   include-dirs:    dist/include
 
   hs-source-dirs:  src
+  default-language: Haskell2010
+

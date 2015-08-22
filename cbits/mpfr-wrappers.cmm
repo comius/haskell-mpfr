@@ -1,6 +1,10 @@
 #include "Cmm.h"
 #include "MpfrDerivedConstants.h"
 
+/*
+TODO: check if MPFR_DECL_INIT gives better results than mpfr_init2
+*/
+
 #define MPFR_REBUILD(X, Y, Z, mpfr)                               \
   if (X >> PREC_SHIFT == 0) {                                     \
     MPFR__mpfr_sign(mpfr) = 1;                                    \
@@ -24,7 +28,6 @@
     sign_prec,                                                    \
     MPFR__mpfr_exp(mpfr),                                         \
     MPFR_UNMANGLE_PTR(MPFR__mpfr_d(mpfr)) - SIZEOF_StgArrWords);
-
 
 mpfr_cmm_init_si(W_ rnd, W_ prec, W_ i)
 {
@@ -235,9 +238,9 @@ again:
   return (ret);
 }
 
-mpfr_cmm_get_str(W_ rnd, W_ base, W_ ps, W_ exp, P_ limbs)
+mpfr_cmm_get_str(W_ rnd, W_ n, W_ base, W_ ps, W_ exp, P_ limbs)
 {
-  // arguments: R1 = rounding mode, R2 = output number base, R3 = prec * sign, R4 = exp, R5 = limbs
+  // arguments: R1 = rounding mode, R2 = output precision,R3 = output number base, R4 = prec * sign, R5 = exp, R6 = limbs
   W_ ret;
   W_ mpfr;
 
@@ -253,7 +256,7 @@ again:
   dec = Sp - 1 * SIZEOF_MPFR - WDS(1);
 
   // Free the memory...
-  (ret) = ccall mpfr_get_str(0, dec "ptr", base, 0, mpfr "ptr", rnd);
+  (ret) = ccall mpfr_get_str(0, dec "ptr", base, n, mpfr "ptr", rnd);
 
   return (W_[dec], ret - SIZEOF_StgArrWords);
 }
@@ -354,11 +357,9 @@ MPFR_INPLACE(mpfr_cmm_nextabove, mpfr_nextabove)
 MPFR_INPLACE(mpfr_cmm_nextbelow, mpfr_nextbelow)
 
 #define MPFR_TAKE1_RET1(name,mpfr_fun)                            \
-name(W_ rnd, W_ ps, W_ exp, P_ limbs)                             \
+name(W_ rnd, W_ prec, W_ ps, W_ exp, P_ limbs)                    \
 {                                                                 \
-  W_ rnd, prec, op1, ret;                                         \
-                                                                  \
-  prec = ps & ~(1 << PREC_SHIFT);                                 \
+  W_ rnd, op1, ret;                                               \
                                                                   \
 again:                                                            \
   STK_CHK_GEN_N(2 * SIZEOF_MPFR);                                 \
@@ -375,6 +376,7 @@ again:                                                            \
   MPFR_RETURN1(ret);                                              \
 }
 
+MPFR_TAKE1_RET1(mpfr_cmm_set,  mpfr_set)
 MPFR_TAKE1_RET1(mpfr_cmm_neg,  mpfr_neg)
 MPFR_TAKE1_RET1(mpfr_cmm_log,  mpfr_log)
 MPFR_TAKE1_RET1(mpfr_cmm_exp,  mpfr_exp)
