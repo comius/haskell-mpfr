@@ -5,11 +5,12 @@
 {-# LANGUAGE MagicHash #-} -- postfix # on identifiers
 {-# LANGUAGE UnboxedTuples #-} -- (#  #)
 {-# LANGUAGE UnliftedFFITypes #-}  -- argument type of foreign import
+{-# LANGUAGE BangPatterns #-}  -- !
 
 module Data.Number.Rounded where
 
 import GHC.Types -- Word
-import GHC.Prim -- Int#, ByteArray#, 
+import GHC.Prim -- Int#, ByteArray#,
 import GHC.Int -- Int32#
 import GHC.Integer.GMP.Internals -- #S, #J
 import GHC.CString -- unpackCString
@@ -35,7 +36,7 @@ data Rounded = Rounded
 
 {- 4.2 Nomenclature and Types - precision -}
 
-{- 
+{-
 gmp.h:
 #if defined (_CRAY) && ! defined (_CRAYMPP)
 /* plain `int' is much faster (48 bits) */
@@ -76,7 +77,7 @@ getPrec (Rounded s _ _) = (I# s) .&. complement prec_bit
 
 {- 4.4 Rounding Modes -}
 
-{- Haskel model of MPFR precision 
+{- Haskel model of MPFR precision
 
 Definition of rounding modes (DON'T USE MPFR_RNDNA!).
 
@@ -90,7 +91,7 @@ typedef enum {
   MPFR_RNDNA=-1 /* round to nearest, with ties away from zero (mpfr_round) */
 } mpfr_rnd_t;
 -}
-data RoundMode 
+data RoundMode
   = Near
   | Zero
   | Up
@@ -106,7 +107,7 @@ instance Enum RoundMode where
   toEnum 5 = error "RoundMode: Not implemented"
   toEnum (-1) = error "RoundMode: Don't use!"
   toEnum _ = error "RoundMode: Unknown"
-  
+
   fromEnum Near = 0
   fromEnum Zero = 1
   fromEnum Up = 2
@@ -121,6 +122,7 @@ mode# r = case fromEnum r of
 
 
 type Exp = GHC.Int.Int64
+
 type RoundedOut# = (# CSignPrec#, CExp#, ByteArray# #)
 
 type Unary
@@ -147,7 +149,7 @@ unary f r p (Rounded s e l) = Rounded s' e' l' where
 binary :: Binary -> RoundMode -> Precision -> Rounded -> Rounded -> Rounded
 binary f r p (Rounded s e l) (Rounded s' e' l') = Rounded s'' e'' l'' where
     (# s'', e'', l'' #) = f (mode# r) (prec# p) s e l s' e' l'
- 
+
 
 cmp :: Comparison -> Rounded -> Rounded -> Bool
 cmp f (Rounded s e l) (Rounded s' e' l') = I# (f s e l s' e' l') /= 0
@@ -175,12 +177,16 @@ foreign import prim "mpfr_cmm_init_z_2exp" mpfrEncode#
 
 set :: RoundMode -> Precision -> Rounded -> Rounded
 set = unary mpfrFromMpfr#
-    
+
 --set_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 
---posInf :: Rounded
+posInf :: Rounded
+posInf = Rounded s -2147483645# l
+  where  (!Rounded s _ l) = zero
+negInf :: Rounded
+negInf = Rounded s -2147483645# l
+  where (!Rounded s _ l) = fromInt Near 2 (-1)
 
---negInf :: Rounded
 --nan :: Rounded
 
 zero :: Rounded
@@ -198,7 +204,7 @@ fromInt r p (I# i#) = Rounded s e l where
 fromIntegerA :: RoundMode -> Precision -> Integer -> Rounded
 fromIntegerA r p (S# i) = Rounded s e l where
     (# s, e, l #) = mpfrFromInt# (mode# r) (prec# p) i
-fromIntegerA r p (J# i xs) = Rounded s e l where 
+fromIntegerA r p (J# i xs) = Rounded s e l where
     (# s, e, l #) = mpfrFromInteger# (mode# r) (prec# p) i xs
 
 --fromString :: String -> Precision -> GHC.Types.Word -> Rounded
@@ -229,7 +235,7 @@ toWord :: RoundMode -> Rounded -> GHC.Types.Word
 -}
 
 foreign import prim "mpfr_cmm_get_str" mpfrGetStr#
-  :: CRounding# -> Int# -> Int# -> 
+  :: CRounding# -> Int# -> Int# ->
      CSignPrec# -> CExp# -> ByteArray# ->
      (# Int#, ByteArray# #)
 
@@ -243,22 +249,22 @@ toStringExp       :: Int -- ^ number of digits
 toStringExp dec d | isInfixOf "NaN" ss = "NaN"
                   | isInfixOf "Inf" ss = s ++ "Infinity"
                   | isZero d = "0"
-                  | e > 0              = 
+                  | e > 0              =
                       s ++ if Prelude.floor prec <= dec
-                           then 
-                               take e ss ++ 
+                           then
+                               take e ss ++
                                let bt = backtrim (drop e ss)
-                               in if null bt 
-                                  then "" 
+                               in if null bt
+                                  then ""
                                   else '.' : bt
                            else head ss : '.' :
-                                let bt = (backtrim . tail) ss 
-                                in (if null bt then "0" else bt) 
+                                let bt = (backtrim . tail) ss
+                                in (if null bt then "0" else bt)
                                    ++ "e" ++ show (pred e)
-                  | otherwise = 
-                      s ++ (head ss : '.' : 
+                  | otherwise =
+                      s ++ (head ss : '.' :
                                (let bt = (backtrim . tail) ss in
-                                if null bt then "0" 
+                                if null bt then "0"
                                 else bt )
                                ++ "e" ++ show (pred e))
                     where (str, e') = mpfrToString Near n 10 d
@@ -267,7 +273,7 @@ toStringExp dec d | isInfixOf "NaN" ss = "NaN"
                           (s, ss) = case head str of
                                       '-' -> ("-", tail str)
                                       _   -> ("" , str)
-                          backtrim = reverse . dropWhile (== '0') . reverse 
+                          backtrim = reverse . dropWhile (== '0') . reverse
                           prec = logBase 10 2 * fromIntegral (getExp d) :: Double
 
 -- | Output a string in base 10 rounded to Near. The difference from @toStringExp@ is that
@@ -275,19 +281,19 @@ toStringExp dec d | isInfixOf "NaN" ss = "NaN"
 toString       :: Int -> Rounded -> String
 toString dec d | isInfixOf "NaN" ss = "NaN"
                | isInfixOf "Inf" ss = s ++ "Infinity"
-               | otherwise          = 
+               | otherwise          =
                    s ++ case compare 0 e of
-                          LT -> take e ss ++ 
-                                (let bt = all (== '0') (drop e ss) 
+                          LT -> take e ss ++
+                                (let bt = all (== '0') (drop e ss)
                                  in if bt then "" else '.' : drop e ss)
-                                ++ (if fromIntegral n - e < 0 
-                                    then 'e' : show (e - fromIntegral n) 
+                                ++ (if fromIntegral n - e < 0
+                                    then 'e' : show (e - fromIntegral n)
                                     else "")
-                          GT -> let ee = fromIntegral dec + e in 
-                                if ee <= 0 then "0" else 
+                          GT -> let ee = fromIntegral dec + e in
+                                if ee <= 0 then "0" else
                                    head ss : '.' : (backtrim . tail . take ee) ss
                                             ++ "e" ++ show (pred e)
-                          EQ -> "0." ++ let bt = all (== '0') ss 
+                          EQ -> "0." ++ let bt = all (== '0') ss
                                         in if bt then "0" else ss
                   where (str, e') = mpfrToString Near n 10 d
                         n        = max dec 5
@@ -295,7 +301,7 @@ toString dec d | isInfixOf "NaN" ss = "NaN"
                         (s, ss) = case head str of
                                     '-' -> ("-", tail str)
                                     _   -> ("" , str)
-                        backtrim = reverse . dropWhile (== '0') . reverse 
+                        backtrim = reverse . dropWhile (== '0') . reverse
 
 instance Show Rounded where
     show = toStringExp 16
@@ -306,6 +312,8 @@ foreign import prim "mpfr_cmm_add" mpfrAdd# :: Binary
 foreign import prim "mpfr_cmm_sub" mpfrSub# :: Binary
 foreign import prim "mpfr_cmm_mul" mpfrMul# :: Binary
 foreign import prim "mpfr_cmm_div" mpfrDiv# :: Binary
+foreign import prim "mpfr_cmm_neg" mpfrNeg# :: Unary
+
 
 add :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
 add = binary mpfrAdd#
@@ -342,7 +350,12 @@ wsub_ :: RoundMode -> Precision -> GHC.Types.Word -> Rounded -> (Rounded, Int)
 mul :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
 mul = binary mpfrMul#
 
+
+mul2i :: RoundMode -> Precision -> Rounded -> Int -> Rounded
+mul2i r p (Rounded s e l) (I# i) = Rounded s (e +# i) l
+
 {-
+mul2i_ :: RoundMode -> Precision -> Rounded -> Int -> (Rounded, Int)
 mul_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 muld :: RoundMode -> Precision -> Rounded -> Double -> Rounded
 muld_ :: RoundMode -> Precision -> Rounded -> Double -> (Rounded, Int)
@@ -384,6 +397,12 @@ poww :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
 poww_ :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
 -}
 
+neg :: RoundMode -> Precision -> Rounded -> Rounded
+neg = unary mpfrNeg#
+
+{- neg_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int) --}
+
+
 {- 5.6 Comparison Functions -}
 
 foreign import prim "mpfr_cmm_cmp" mpfrCmp# :: CSignPrec# -> CExp# -> ByteArray#
@@ -415,8 +434,24 @@ instance Ord Rounded where
 --  min = binary mpfrMin#
 --  max = binary mpfrMax#
 
+{- expZero# :: CExp#
+expZero# = -2147483647#
+
+expNaN# :: CExp#
+expNaN# = -2147483646#
+
+expInf# :: CExp#
+expInf# = -2147483645#
+-}
+
+isNaN :: Rounded -> Bool
+isNaN (Rounded _ e _) = isTrue# (e ==# -2147483646#)
+
+isInfinite :: Rounded -> Bool
+isInfinite (Rounded _ e _) = isTrue# (e ==# -2147483645#)
+
 isZero :: Rounded -> Bool
-isZero = (==) zero
+isZero (Rounded _ e _) = isTrue# (e ==# -2147483647#)
 
 {-cmp :: Rounded -> Rounded -> Maybe Ordering
 
@@ -438,9 +473,7 @@ equal :: Rounded -> Rounded -> Bool
 lessgreater :: Rounded -> Rounded -> Maybe Bool
 unordered :: Rounded -> Rounded -> Maybe Bool
 
-isInfinite :: Rounded -> Bool
 isInteger :: Rounded -> Bool
-isNaN :: Rounded -> Bool
 isNumber :: Rounded -> Bool
 
 --}
@@ -623,8 +656,6 @@ minD_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 modf :: RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded)
 modf_ ::
   RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded, Int)
-neg :: RoundMode -> Precision -> Rounded -> Rounded
-neg_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 -- newRandomStatePointer ::
 --  GHC.Ptr.Ptr hmpfr-0.3.3.5:FFIhelper.GmpRandState
 nextAbove :: Rounded -> Rounded
@@ -682,11 +713,7 @@ zeta :: RoundMode -> Precision -> Rounded -> Rounded
 zeta_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 zetaw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
 zetaw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
-mul2i :: RoundMode -> Precision -> Rounded -> Int -> Rounded
-mul2i_ :: RoundMode -> Precision -> Rounded -> Int -> (Rounded, Int)
 mul2w :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
 mul2w_ :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
 
 -}
-
-
