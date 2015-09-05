@@ -9,15 +9,15 @@
 
 module Data.Number.Rounded where
 
-import GHC.Types -- Word
-import GHC.Prim -- Int#, ByteArray#,
+import Data.Bits
+import Data.List (isInfixOf)
+import Data.Ratio
+import GHC.CString -- unpackCString
 import GHC.Int -- Int32#
 import GHC.Integer.GMP.Internals -- #S, #J
-import GHC.CString -- unpackCString
-import Data.Bits
-
-import Data.List (isInfixOf)
-
+import GHC.Prim -- Int#, ByteArray#,
+import GHC.Types -- Word
+import GHC.Integer.GMP.Prim (int2Integer#)
 
 {- Basic data -}
 type CPrec#      = Int#
@@ -169,7 +169,7 @@ foreign import prim "mpfr_cmm_init_z" mpfrFromInteger#
 foreign import prim "mpfr_cmm_init_q" mpfrFromRational#
   :: CRounding# -> CPrecision# -> Int# -> ByteArray# -> Int# -> ByteArray# -> RoundedOut#
 
-foreign import prim "mpfr_cmm_init_d" mfpr_cmm_init_d
+foreign import prim "mpfr_cmm_init_d" mfprFromDouble#
   :: CRounding# -> CPrecision# -> Double# -> RoundedOut#
 
 foreign import prim "mpfr_cmm_init_z_2exp" mpfrEncode#
@@ -214,7 +214,7 @@ fromIntegerA r p (J# i xs) = Rounded s e l where
 -- | Construct a rounded floating point number directly from a 'Double'.
 fromDouble :: RoundMode -> Precision -> Double -> Rounded
 fromDouble r p (D# d) = Rounded s e l where
-    (# s, e, l #) = mfpr_cmm_init_d (mode# r) (prec# p) d
+    (# s, e, l #) = mfprFromDouble# (mode# r) (prec# p) d
 
 --fromDouble_ :: RoundMode -> Precision -> Double -> (Rounded, Int)
 --stringToMPFR :: RoundMode -> Precision -> GHC.Types.Word -> String -> Rounded
@@ -222,6 +222,13 @@ fromDouble r p (D# d) = Rounded s e l where
 --strtofr ::RoundMode -> Precision -> GHC.Types.Word -> String -> (Rounded, String)
 --strtofr_ :: RoundMode  -> Precision -> GHC.Types.Word -> String -> (Rounded, String, Int)
 
+toInt# (S# x#) = int2Integer# x#
+toInt# (J# x# xs#) =  (# x#, xs# #)
+fromRationalA :: RoundMode -> Precision -> Rational -> Rounded
+fromRationalA r p rat = Rounded s e l where
+    !(# n, ns #) = toInt# $ numerator rat
+    !(# d, ds #) = toInt# $ denominator rat
+    (# s, e, l #) = mpfrFromRational# (mode# r) (prec# p) n ns d ds
 
 {- 5.4 Conversion Functions -}
 
