@@ -37,8 +37,7 @@ inDirectory dir action = do
   setCurrentDirectory old
   return res
 
-mpfrVersion = "3.1.2"
-mpfrRoot = "deps/mpfr-" ++ mpfrVersion
+mpfrRoot = "deps/mpfr"
 
 
 pathsWithSuffix :: String -> FilePath -> IO [FilePath]
@@ -76,13 +75,13 @@ createDirectory' dir = do
 configureMpfr :: FilePath -> IO ()
 configureMpfr distDir =
   inDirectory mpfrRoot $ do
-    putStrLn $ "--> Configuring MPFR " ++ mpfrVersion ++ "..."
+    putStrLn $ "--> Configuring MPFR..."
     runOrBomb "sh" ["configure", "--with-gmp=/usr/local", "--prefix=" ++ distDir]
 
 makeMpfr :: FilePath -> IO ()
 makeMpfr distDir =
   inDirectory mpfrRoot $ do
-    putStrLn $ "--> Building MPFR " ++ mpfrVersion ++ "..."
+    putStrLn $ "--> Building MPFR..."
     runOrBomb "make" ["-j4"]
     runOrBomb "make" ["install"]
 
