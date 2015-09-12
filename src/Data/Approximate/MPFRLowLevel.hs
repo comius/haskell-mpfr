@@ -7,7 +7,7 @@
 {-# LANGUAGE UnliftedFFITypes #-}  -- argument type of foreign import
 {-# LANGUAGE BangPatterns #-}  -- !
 
-module Data.Number.Rounded where
+module Data.Approximate.MPFRLowLevel where
 import Prelude hiding (isNaN, isInfinite)
 import Data.Bits
 import Data.List (isInfixOf)
