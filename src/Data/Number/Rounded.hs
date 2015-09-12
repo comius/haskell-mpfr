@@ -8,7 +8,7 @@
 {-# LANGUAGE BangPatterns #-}  -- !
 
 module Data.Number.Rounded where
-
+import Prelude hiding (isNaN, isInfinite)
 import Data.Bits
 import Data.List (isInfixOf)
 import Data.Ratio
@@ -181,10 +181,10 @@ set = unary mpfrFromMpfr#
 --set_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 
 posInf :: Rounded
-posInf = Rounded s -2147483645# l
+posInf = Rounded s (-0x8000000000000000# +# 3#) l
   where  (!Rounded s _ l) = zero
 negInf :: Rounded
-negInf = Rounded s -2147483645# l
+negInf = Rounded s (-0x8000000000000000# +# 3#) l
   where (!Rounded s _ l) = fromInt Near 2 (-1)
 
 --nan :: Rounded
@@ -221,7 +221,7 @@ fromDouble r p (D# d) = Rounded s e l where
 --stringToMPFR_ :: RoundMode -> Precision -> GHC.Types.Word -> String -> (Rounded, Int)
 --strtofr ::RoundMode -> Precision -> GHC.Types.Word -> String -> (Rounded, String)
 --strtofr_ :: RoundMode  -> Precision -> GHC.Types.Word -> String -> (Rounded, String, Int)
-
+toInt# :: Integer -> (# Int#, ByteArray# #)
 toInt# (S# x#) = int2Integer# x#
 toInt# (J# x# xs#) =  (# x#, xs# #)
 fromRationalA :: RoundMode -> Precision -> Rational -> Rounded
@@ -452,13 +452,13 @@ expInf# = -2147483645#
 -}
 
 isNaN :: Rounded -> Bool
-isNaN (Rounded _ e _) = isTrue# (e ==# -2147483646#)
+isNaN (Rounded _ e _) = isTrue# (e ==# -0x8000000000000000# +# 2#)
 
 isInfinite :: Rounded -> Bool
-isInfinite (Rounded _ e _) = isTrue# (e ==# -2147483645#)
+isInfinite (Rounded _ e _) = isTrue# (e ==# -0x8000000000000000# +# 3#)
 
 isZero :: Rounded -> Bool
-isZero (Rounded _ e _) = isTrue# (e ==# -2147483647#)
+isZero (Rounded _ e _) = isTrue# (e ==# -0x8000000000000000# +# 1#)
 
 {-cmp :: Rounded -> Rounded -> Maybe Ordering
 
@@ -575,7 +575,7 @@ log1p_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 {- 5.12 Misc functions-}
 
 getExp :: Rounded -> Exp
-getExp (Rounded _ e _) = I64# e
+getExp (Rounded _ e# _) = I64# e#
 
 
 {-
