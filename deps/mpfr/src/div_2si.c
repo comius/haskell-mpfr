@@ -45,11 +45,12 @@ mpfr_div_2si (mpfr_ptr y, mpfr_srcptr x, long int n, mpfr_rnd_t rnd_mode)
           if (rnd_mode == MPFR_RNDN &&
               (__gmpfr_emin > MPFR_EMAX_MAX - (n - 1) ||
                exp < __gmpfr_emin + (n - 1) ||
-               (inexact >= 0 && mpfr_powerof2_raw (y))))
+               ((MPFR_IS_NEG (y) ? inexact <= 0 : inexact >= 0) &&
+                mpfr_powerof2_raw (y))))
             rnd_mode = MPFR_RNDZ;
           return mpfr_underflow (y, rnd_mode, MPFR_SIGN(y));
         }
-      else if (MPFR_UNLIKELY(n < 0 && (__gmpfr_emax < MPFR_EMIN_MIN - n ||
+      else if (MPFR_UNLIKELY(n <= 0 && (__gmpfr_emax < MPFR_EMIN_MIN - n ||
                                        exp > __gmpfr_emax + n)) )
         return mpfr_overflow (y, rnd_mode, MPFR_SIGN(y));
 

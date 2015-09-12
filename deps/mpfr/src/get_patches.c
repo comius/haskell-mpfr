@@ -25,5 +25,5 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 const char *
 mpfr_get_patches (void)
 {
-  return "";
+  return "frexp muldiv-2exp-underflow muldiv-2exp-overflow lngamma-and-doc";
 }
