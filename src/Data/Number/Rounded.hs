@@ -320,7 +320,8 @@ foreign import prim "mpfr_cmm_sub" mpfrSub# :: Binary
 foreign import prim "mpfr_cmm_mul" mpfrMul# :: Binary
 foreign import prim "mpfr_cmm_div" mpfrDiv# :: Binary
 foreign import prim "mpfr_cmm_neg" mpfrNeg# :: Unary
-
+foreign import prim "mpfr_cmm_sqr" mpfrSqr# :: Unary
+foreign import prim "mpfr_cmm_pow" mpfrPow# :: Binary
 
 add :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
 add = binary mpfrAdd#
@@ -370,10 +371,13 @@ muli :: RoundMode -> Precision -> Rounded -> Int -> Rounded
 muli_ :: RoundMode -> Precision -> Rounded -> Int -> (Rounded, Int)
 mulw :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
 mulw_ :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
+mul2w :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
+mul2w_ :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
 -}
 
-{-
 sqr :: RoundMode -> Precision -> Rounded -> Rounded
+sqr = unary mpfrSqr#
+{-
 sqr_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 -}
 
@@ -395,8 +399,10 @@ wdiv :: RoundMode -> Precision -> GHC.Types.Word -> Rounded -> Rounded
 wdiv_ :: RoundMode -> Precision -> GHC.Types.Word -> Rounded -> (Rounded, Int)
 -}
 
-{-
 pow :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
+pow = binary mpfrPow#
+
+{-
 pow_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 powi :: RoundMode -> Precision -> Rounded -> Int -> Rounded
 powi_ :: RoundMode -> Precision -> Rounded -> Int -> (Rounded, Int)
@@ -432,23 +438,14 @@ instance Eq Rounded where
   (/=) = cmp mpfrNotEqual#
 
 instance Ord Rounded where
-  compare (Rounded s e l) (Rounded s' e' l') = compare (fromIntegral (I# (mpfrCmp# s e l s' e' l'))) (0 :: Int32)
+  compare (Rounded s e l) (Rounded s' e' l') = compare (fromIntegral (I# (mpfrCmp# s e l s' e' l'))) (0 :: Int32) -- TODO opt
   (<=) = cmp mpfrLessEqual#
   (>=) = cmp mpfrGreaterEqual#
   (<) = cmp mpfrLess#
   (>) = cmp mpfrGreater#
-  -- we shed the Rounding r dependency if we drop these, but give wrong answers on negative 0
---  min = binary mpfrMin#
---  max = binary mpfrMax#
-
-{- expZero# :: CExp#
-expZero# = -2147483647#
-
-expNaN# :: CExp#
-expNaN# = -2147483646#
-
-expInf# :: CExp#
-expInf# = -2147483645#
+  {- TODO
+  min = binary mpfrMin#   
+  max = binary mpfrMax#
 -}
 
 isNaN :: Rounded -> Bool
@@ -720,7 +717,5 @@ zeta :: RoundMode -> Precision -> Rounded -> Rounded
 zeta_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 zetaw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
 zetaw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
-mul2w :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
-mul2w_ :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
 
 -}
