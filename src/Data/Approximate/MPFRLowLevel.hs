@@ -7,8 +7,17 @@
 {-# LANGUAGE UnliftedFFITypes #-}  -- argument type of foreign import
 {-# LANGUAGE BangPatterns #-}  -- !
 
-module Data.Approximate.MPFRLowLevel where
-import Prelude hiding (isNaN, isInfinite)
+module Data.Approximate.MPFRLowLevel (
+  RoundMode(..), Precision, Rounded,
+  getPrec,
+  set,
+  posInf, negInf, zero, 
+  fromInt, fromIntegerA, fromDouble, fromRationalA, 
+  add, sub, mul, mul2i, sqr, div, pow, neg, 
+  isNaN, isInfinite, isZero, 
+  getExp
+) where
+import Prelude hiding (isNaN, isInfinite, div)
 import Data.Bits
 import Data.List (isInfixOf)
 import Data.Ratio
