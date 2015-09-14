@@ -11,13 +11,14 @@ module Data.Approximate.MPFRLowLevel (
   RoundMode(..), Precision, Rounded,
   getPrec,
   set,
-  posInf, negInf, zero, 
-  fromInt, fromIntegerA, fromDouble, fromRationalA, 
-  add, sub, mul, mul2i, sqr, div, pow, neg, 
-  isNaN, isInfinite, isZero, 
+  posInf, negInf, zero, naN,
+  fromInt, fromIntegerA, fromDouble, fromRationalA,
+  add, sub, mul, mul2i, sqr, div, pow, neg, sqrt,
+  exp, log, sin, cos, tan, asin, acos, atan,
+  isNaN, isInfinite, isZero,
   getExp
 ) where
-import Prelude hiding (isNaN, isInfinite, div)
+import Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan)
 import Data.Bits
 import Data.List (isInfixOf)
 import Data.Ratio
@@ -158,10 +159,12 @@ unary f r p (Rounded s e l) = Rounded s' e' l' where
 binary :: Binary -> RoundMode -> Precision -> Rounded -> Rounded -> Rounded
 binary f r p (Rounded s e l) (Rounded s' e' l') = Rounded s'' e'' l'' where
     (# s'', e'', l'' #) = f (mode# r) (prec# p) s e l s' e' l'
+{-# INLINE binary #-}
 
 
 cmp :: Comparison -> Rounded -> Rounded -> Bool
 cmp f (Rounded s e l) (Rounded s' e' l') = I# (f s e l s' e' l') /= 0
+{-# INLINE cmp #-}
 
 
 {- 5.2 Assignment Functions -}
@@ -196,7 +199,8 @@ negInf :: Rounded
 negInf = Rounded s (-0x8000000000000000# +# 3#) l
   where (!Rounded s _ l) = fromInt Near 2 (-1)
 
---nan :: Rounded
+naN = Rounded s (-0x8000000000000000# +# 2#) l
+  where (!Rounded s _ l) = zero
 
 zero :: Rounded
 zero = fromInt Near 2 0
@@ -330,6 +334,7 @@ foreign import prim "mpfr_cmm_mul" mpfrMul# :: Binary
 foreign import prim "mpfr_cmm_div" mpfrDiv# :: Binary
 foreign import prim "mpfr_cmm_neg" mpfrNeg# :: Unary
 foreign import prim "mpfr_cmm_sqr" mpfrSqr# :: Unary
+foreign import prim "mpfr_cmm_sqrt" mpfrSqrt# :: Unary
 foreign import prim "mpfr_cmm_pow" mpfrPow# :: Binary
 
 add :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
@@ -389,6 +394,11 @@ sqr = unary mpfrSqr#
 {-
 sqr_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 -}
+
+sqrt :: RoundMode -> Precision -> Rounded -> Rounded
+sqrt = unary mpfrSqrt#
+--sqrt_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+
 
 div :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
 div = binary mpfrDiv#
@@ -453,7 +463,7 @@ instance Ord Rounded where
   (<) = cmp mpfrLess#
   (>) = cmp mpfrGreater#
   {- TODO
-  min = binary mpfrMin#   
+  min = binary mpfrMin#
   max = binary mpfrMax#
 -}
 
@@ -493,25 +503,56 @@ isNumber :: Rounded -> Bool
 
 
 {- 5.7 Special Functions -}
-{-log :: RoundMode -> Precision -> Rounded -> Rounded
+
+foreign import prim "mpfr_cmm_exp" mpfrExp# :: Unary
+foreign import prim "mpfr_cmm_log" mpfrLog# :: Unary
+
+foreign import prim "mpfr_cmm_sin" mpfrSin# :: Unary
+foreign import prim "mpfr_cmm_cos" mpfrCos# :: Unary
+foreign import prim "mpfr_cmm_tan" mpfrTan# :: Unary
+foreign import prim "mpfr_cmm_acos" mpfrASin# :: Unary
+foreign import prim "mpfr_cmm_asin" mpfrACos# :: Unary
+foreign import prim "mpfr_cmm_atan" mpfrATan# :: Unary
+
+
+exp :: RoundMode -> Precision -> Rounded -> Rounded
+exp = unary mpfrExp#
+
+log :: RoundMode -> Precision -> Rounded -> Rounded
+log = unary mpfrLog#
+
+sin :: RoundMode -> Precision -> Rounded -> Rounded
+sin = unary mpfrSin#
+
+cos :: RoundMode -> Precision -> Rounded -> Rounded
+cos = unary mpfrCos#
+
+tan :: RoundMode -> Precision -> Rounded -> Rounded
+tan = unary mpfrTan#
+
+asin :: RoundMode -> Precision -> Rounded -> Rounded
+asin = unary mpfrASin#
+
+acos :: RoundMode -> Precision -> Rounded -> Rounded
+acos = unary mpfrACos#
+
+atan :: RoundMode -> Precision -> Rounded -> Rounded
+atan = unary mpfrATan#
+{-
 log_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 log10 :: RoundMode -> Precision -> Rounded -> Rounded
 log10_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 log2 :: RoundMode -> Precision -> Rounded -> Rounded
 log2_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 
-exp :: RoundMode -> Precision -> Rounded -> Rounded
 exp_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 exp10 :: RoundMode -> Precision -> Rounded -> Rounded
 exp10_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 exp2 :: RoundMode -> Precision -> Rounded -> Rounded
 exp2_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 
-cos :: RoundMode -> Precision -> Rounded -> Rounded
 cos_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-sin :: RoundMode -> Precision -> Rounded -> Rounded
 sin_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-tan :: RoundMode -> Precision -> Rounded -> Rounded
 tan_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 
 sincos :: RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded)
@@ -525,11 +566,8 @@ csc_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 cot :: RoundMode -> Precision -> Rounded -> Rounded
 cot_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 
-acos :: RoundMode -> Precision -> Rounded -> Rounded
 acos_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-asin :: RoundMode -> Precision -> Rounded -> Rounded
 asin_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-atan :: RoundMode -> Precision -> Rounded -> Rounded
 atan_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 atan2 ::
   RoundMode -> Precision -> Rounded -> Rounded -> Rounded
@@ -703,8 +741,6 @@ sech :: RoundMode -> Precision -> Rounded -> Rounded
 sech_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 sgn :: Rounded -> Maybe Int
 signbit :: Rounded -> Bool
-sqrt :: RoundMode -> Precision -> Rounded -> Rounded
-sqrt_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 sqrtw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
 sqrtw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
 tanh :: RoundMode -> Precision -> Rounded -> Rounded
