@@ -114,6 +114,7 @@ mpfrHooks = autoconfUserHooks
     createDirectory' $ distDir </> "include"
     createDirectory' $ distDir </> "lib"
     createDirectory' $ distDir </> "tmp"
+    createDirectory' $ distDir </> "tmp_p"
     return emptyHookedBuildInfo
 
   mpfrPostConf args flags pkg_descr lbi = do
@@ -178,14 +179,14 @@ mpfrHooks = autoconfUserHooks
     profExists <- doesFileExist $ distDir </> "build" </> "libHSrounded-0.1_p.a"
     when profExists $ do
       putStrLn "Mangling static library (prof)..."
-      inDirectory (distDir </> "tmp") $ do
+      inDirectory (distDir </> "tmp_p") $ do
         runOrBomb "ar" ["-x", distDir </> "build" </> "libHSrounded-0.1_p.a"]
         runOrBomb "ar" ["-x", distDir </> "lib" </> "libmpfr.a"]
 
-      objects <- pathsWithSuffix ".o" $ distDir </> "tmp"
+      objects <- pathsWithSuffix "o" $ distDir </> "tmp_p"
       --forM_ objects $ \o -> do
-      --  runOrBomb "mv" [o, o <.> "tmp"]
-      --  runOrBomb "objcopy" ["--redefine-syms=rounded.rename", o <.> "tmp", o]
+      --  runOrBomb "mv" [o, o <.> "tmp_p"]
+      --  runOrBomb "objcopy" ["--redefine-syms=rounded.rename", o <.> "tmp_p", o]
 
       createArLibArchive silent lbi' (distDir </> "build" </> "libHSrounded-0.1_p.a") objects
       runOrBomb "ranlib" [distDir </> "build" </> "libHSrounded-0.1_p.a"]
