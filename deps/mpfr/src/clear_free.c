@@ -1,6 +1,6 @@
-/* mpfr_get_patches -- Patches that have been applied
+/* mpfr_clear_free -- free the memory space allocated for a floating-point number
 
-Copyright 2007-2015 Free Software Foundation, Inc.
+Copyright 1999-2001, 2004-2015 Free Software Foundation, Inc.
 Contributed by the AriC and Caramel projects, INRIA.
 
 This file is part of the GNU MPFR Library.
@@ -21,9 +21,11 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA. */
 
 #include "mpfr-impl.h"
+#include <stdlib.h>
 
-const char *
-mpfr_get_patches (void)
+void
+mpfr_clear_free (mpfr_ptr m)
 {
-  return "";
+  free (MPFR_GET_REAL_PTR (m));
+  MPFR_MANT (m) = (mp_limb_t *) 0;
 }
