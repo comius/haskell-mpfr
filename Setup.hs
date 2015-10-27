@@ -165,31 +165,31 @@ mpfrHooks = autoconfUserHooks
 
     putStrLn "Mangling static library..."
     inDirectory (distDir </> "tmp") $ do
-      runOrBomb "ar" ["-x", distDir </> "build" </> "libHSrounded-0.1.a"]
+      runOrBomb "ar" ["-x", distDir </> "build" </> "libHShaskell-mpfr-0.1.a"]
       runOrBomb "ar" ["-x", distDir </> "lib" </> "libmpfr.a"]
 
     objects <- pathsWithSuffix ".o" $ distDir </> "tmp"
     --forM_ objects $ \o -> do
     --  runOrBomb "mv" [o, o <.> "tmp"]
-    --  runOrBomb "objcopy" ["--redefine-syms=rounded.rename", o <.> "tmp", o]
+    --  runOrBomb "objcopy" ["--redefine-syms=haskell-mpfr.rename", o <.> "tmp", o]
 
-    createArLibArchive silent lbi' (distDir </> "build" </> "libHSrounded-0.1.a") objects
-    runOrBomb "ranlib" [distDir </> "build" </> "libHSrounded-0.1.a"]
+    createArLibArchive silent lbi' (distDir </> "build" </> "libHShaskell-mpfr-0.1.a") objects
+    runOrBomb "ranlib" [distDir </> "build" </> "libHShaskell-mpfr-0.1.a"]
 
-    profExists <- doesFileExist $ distDir </> "build" </> "libHSrounded-0.1_p.a"
+    profExists <- doesFileExist $ distDir </> "build" </> "libHShaskell-mpfr-0.1_p.a"
     when profExists $ do
       putStrLn "Mangling static library (prof)..."
       inDirectory (distDir </> "tmp_p") $ do
-        runOrBomb "ar" ["-x", distDir </> "build" </> "libHSrounded-0.1_p.a"]
+        runOrBomb "ar" ["-x", distDir </> "build" </> "libHShaskell-mpfr-0.1_p.a"]
         runOrBomb "ar" ["-x", distDir </> "lib" </> "libmpfr.a"]
 
       objects <- pathsWithSuffix "o" $ distDir </> "tmp_p"
       --forM_ objects $ \o -> do
       --  runOrBomb "mv" [o, o <.> "tmp_p"]
-      --  runOrBomb "objcopy" ["--redefine-syms=rounded.rename", o <.> "tmp_p", o]
+      --  runOrBomb "objcopy" ["--redefine-syms=haskell-mpfr.rename", o <.> "tmp_p", o]
 
-      createArLibArchive silent lbi' (distDir </> "build" </> "libHSrounded-0.1_p.a") objects
-      runOrBomb "ranlib" [distDir </> "build" </> "libHSrounded-0.1_p.a"]
+      createArLibArchive silent lbi' (distDir </> "build" </> "libHShaskell-mpfr-0.1_p.a") objects
+      runOrBomb "ranlib" [distDir </> "build" </> "libHShaskell-mpfr-0.1_p.a"]
 
     postBuild simpleUserHooks args flags pkg_descr lbi
 
