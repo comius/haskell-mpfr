@@ -16,7 +16,8 @@ module Data.Approximate.MPFRLowLevel (
   add, sub, mul, mul2i, sqr, div, pow, neg, sqrt,
   exp, log, sin, cos, tan, asin, acos, atan,
   isNaN, isInfinite, isZero,
-  getExp
+  getExp,
+  toRationalA
 ) where
 import Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan)
 import Data.Bits
@@ -253,6 +254,19 @@ toString :: GHC.Types.Word -> Rounded -> String
 toStringExp :: GHC.Types.Word -> Rounded -> String
 toWord :: RoundMode -> Rounded -> GHC.Types.Word
 -}
+
+foreign import prim "mpfr_cmm_get_z_2exp" mpfrDecode#
+  :: CSignPrec# -> CExp# -> ByteArray# -> (# CExp#, Int#, ByteArray# #)
+
+decodeFloat' :: Rounded -> (Integer, Int)
+decodeFloat' (Rounded sp e l) = case mpfrDecode# sp e l of (# i, s, d #) -> (J# s d, I# i)
+
+toRationalA :: Rounded -> Rational
+toRationalA r
+   | e > 0     = fromIntegral (s `shiftL` e)
+   | otherwise = s % (1 `shiftL` negate e)
+   where (s, e) = decodeFloat' r
+
 
 foreign import prim "mpfr_cmm_get_str" mpfrGetStr#
   :: CRounding# -> Int# -> Int# ->
