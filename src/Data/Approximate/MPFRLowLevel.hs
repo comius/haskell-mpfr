@@ -15,11 +15,12 @@ module Data.Approximate.MPFRLowLevel (
   fromInt, fromIntegerA, fromDouble, fromRationalA,
   add, sub, mul, mul2i, sqr, div, pow, neg, sqrt,
   exp, log, sin, cos, tan, asin, acos, atan,
+  pi,
   isNaN, isInfinite, isZero,
   getExp,
   toRationalA
 ) where
-import Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan)
+import Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan, pi)
 import Data.Bits
 import Data.List (isInfixOf)
 import Data.Ratio
@@ -136,6 +137,10 @@ type Exp = GHC.Int.Int64
 
 type RoundedOut# = (# CSignPrec#, CExp#, ByteArray# #)
 
+type Constant
+  = CRounding# -> CPrec# ->
+    RoundedOut#
+
 type Unary
   = CRounding# -> CPrec# ->
     CSignPrec# -> CExp# -> ByteArray# -> RoundedOut#
@@ -150,6 +155,12 @@ type Comparison
   = CSignPrec# -> CExp# -> ByteArray# ->
     CSignPrec# -> CExp# -> ByteArray# ->
     Int#
+
+constant :: Constant -> RoundMode -> Precision -> Rounded
+constant f r p = Rounded s' e' l' where
+    (# s', e', l' #) = f (mode# r) (prec# p)
+{-# INLINE constant #-}
+
 
 unary :: Unary -> RoundMode -> Precision -> Rounded -> Rounded
 unary f r p (Rounded s e l) = Rounded s' e' l' where
@@ -635,6 +646,10 @@ log1p_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 getExp :: Rounded -> Exp
 getExp (Rounded _ e# _) = I64# e#
 
+foreign import prim "mpfr_cmm_const_pi" mpfrPi# :: Constant
+
+pi :: RoundMode -> Precision -> Rounded
+pi = constant mpfrPi#
 
 {-
 absD :: RoundMode -> Precision -> Rounded -> Rounded
