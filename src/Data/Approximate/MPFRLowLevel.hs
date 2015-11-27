@@ -18,7 +18,7 @@ module Data.Approximate.MPFRLowLevel (
   pi,
   isNaN, isInfinite, isZero,
   getExp,
-  toRationalA
+  toRationalA, toDoubleA
 ) where
 import Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan, pi)
 import Data.Bits
@@ -278,6 +278,14 @@ toRationalA r
    | otherwise = s % (1 `shiftL` negate e)
    where (s, e) = decodeFloat' r
 
+foreign import prim "mpfr_cmm_get_d" mpfrGetDouble#
+   :: CRounding# ->
+      CSignPrec# -> CExp# -> ByteArray# ->
+      Double#
+
+toDoubleA :: RoundMode -> Rounded -> Double
+toDoubleA r (Rounded sp e l) =
+    let d = mpfrGetDouble# (mode# r) sp e l in D# d
 
 foreign import prim "mpfr_cmm_get_str" mpfrGetStr#
   :: CRounding# -> Int# -> Int# ->
