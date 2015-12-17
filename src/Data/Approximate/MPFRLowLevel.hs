@@ -243,6 +243,14 @@ fromRationalA r p rat = Rounded s e l where
     !(# d, ds #) = toInt# $ denominator rat
     (# s, e, l #) = mpfrFromRational# (mode# r) (prec# p) n ns d ds
 
+{-
+int2i :: RoundMode -> Precision -> Int -> Int -> Rounded
+int2i_ :: RoundMode -> Precision -> Int -> Int -> (Rounded, Int)
+int2w :: RoundMode -> Precision -> GHC.Types.Word -> Int -> Rounded
+int2w_ :: RoundMode -> Precision -> GHC.Types.Word -> Int -> (Rounded, Int)
+
+-}
+
 {- 5.4 Conversion Functions -}
 
 {-
@@ -322,7 +330,17 @@ toString dec d | isInfixOf "NaN" ss = "NaN"
                                     '-' -> ("-", tail str)
                                     _   -> ("" , str)
                         backtrim = reverse . dropWhile (== '0') . reverse
+{-
 
+
+fitsSInt :: RoundMode -> Rounded -> Bool
+fitsSLong :: RoundMode -> Rounded -> Bool
+fitsSShort :: RoundMode -> Rounded -> Bool
+fitsUInt :: RoundMode -> Rounded -> Bool
+fitsULong :: RoundMode -> Rounded -> Bool
+fitsUShort :: RoundMode -> Rounded -> Bool
+
+-}
 instance Show Rounded where
     show = toStringExp 16
 
@@ -395,11 +413,6 @@ sqr = unary mpfrSqr#
 sqr_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 -}
 
-sqrt :: RoundMode -> Precision -> Rounded -> Rounded
-sqrt = unary mpfrSqrt#
---sqrt_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-
 div :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
 div = binary mpfrDiv#
 {-
@@ -416,7 +429,29 @@ idiv :: RoundMode -> Precision -> Int -> Rounded -> Rounded
 idiv_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
 wdiv :: RoundMode -> Precision -> GHC.Types.Word -> Rounded -> Rounded
 wdiv_ :: RoundMode -> Precision -> GHC.Types.Word -> Rounded -> (Rounded, Int)
+div2i :: RoundMode -> Precision -> Rounded -> Int -> Rounded
+div2i_ :: RoundMode -> Precision -> Rounded -> Int -> (Rounded, Int)
+div2w :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
+div2w_ :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
 -}
+
+sqrt :: RoundMode -> Precision -> Rounded -> Rounded
+sqrt = unary mpfrSqrt#
+--sqrt_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+{-
+recSqrt :: RoundMode -> Precision -> Rounded -> Rounded
+recSqrt_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+
+sqrtw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
+sqrtw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
+
+cbrt :: RoundMode -> Precision -> Rounded -> Rounded
+cbrt_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+root :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
+root_ ::
+  RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
+--}
+
 
 pow :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
 pow = binary mpfrPow#
@@ -433,7 +468,25 @@ neg :: RoundMode -> Precision -> Rounded -> Rounded
 neg = unary mpfrNeg#
 
 {- neg_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int) --}
+{-
+absD :: RoundMode -> Precision -> Rounded -> Rounded
+absD_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+-}
 
+{-
+dim :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
+dim_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
+
+wpow :: RoundMode -> Precision -> GHC.Types.Word -> Rounded -> Rounded
+wpow_ ::
+  RoundMode -> Precision -> GHC.Types.Word -> Rounded -> (Rounded, Int)
+wpoww ::
+  RoundMode -> Precision -> GHC.Types.Word -> GHC.Types.Word -> Rounded
+wpoww_ ::
+  RoundMode
+  -> Precision -> GHC.Types.Word -> GHC.Types.Word -> (Rounded, Int)
+
+-}
 
 {- 5.6 Comparison Functions -}
 
@@ -498,6 +551,12 @@ unordered :: Rounded -> Rounded -> Maybe Bool
 
 isInteger :: Rounded -> Bool
 isNumber :: Rounded -> Bool
+sgn :: Rounded -> Maybe Int
+
+maxD :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
+maxD_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
+minD :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
+minD_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 
 --}
 
@@ -544,6 +603,13 @@ log10 :: RoundMode -> Precision -> Rounded -> Rounded
 log10_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 log2 :: RoundMode -> Precision -> Rounded -> Rounded
 log2_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+catalan :: RoundMode -> Precision -> Rounded
+catalan_ :: RoundMode -> Precision -> (Rounded, Int)
+pi :: RoundMode -> Precision -> Rounded
+pi_ :: RoundMode -> Precision -> (Rounded, Int)
+euler :: RoundMode -> Precision -> Rounded
+euler_ :: RoundMode -> Precision -> (Rounded, Int)
+
 
 exp_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 exp10 :: RoundMode -> Precision -> Rounded -> Rounded
@@ -583,13 +649,57 @@ asinh :: RoundMode -> Precision -> Rounded -> Rounded
 asinh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 sinh :: RoundMode -> Precision -> Rounded -> Rounded
 sinh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+tanh :: RoundMode -> Precision -> Rounded -> Rounded
+tanh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+
 sinhcosh ::
   RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded)
 sinhcosh_ ::
   RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded, Int)
 
+sech :: RoundMode -> Precision -> Rounded -> Rounded
+sech_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+csch :: RoundMode -> Precision -> Rounded -> Rounded
+csch_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+coth :: RoundMode -> Precision -> Rounded -> Rounded
+coth_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+
+
 atanh :: RoundMode -> Precision -> Rounded -> Rounded
 atanh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+
+facw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
+facw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
+
+expm1 :: RoundMode -> Precision -> Rounded -> Rounded
+expm1_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+
+eint :: RoundMode -> Precision -> Rounded -> Rounded
+eint_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+
+
+li2 :: RoundMode -> Precision -> Rounded -> Rounded
+li2_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+
+gamma :: RoundMode -> Precision -> Rounded -> Rounded
+gamma_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+
+lngamma :: RoundMode -> Precision -> Rounded -> Rounded
+lngamma_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+
+lgamma :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+lgamma_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int, Int)
+
+zeta :: RoundMode -> Precision -> Rounded -> Rounded
+zeta_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+zetaw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
+zetaw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
+
+erf :: RoundMode -> Precision -> Rounded -> Rounded
+erf_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+erfc :: RoundMode -> Precision -> Rounded -> Rounded
+erfc_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+
 
 j0 :: RoundMode -> Precision -> Rounded -> Rounded
 j0_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
@@ -598,12 +708,25 @@ j1_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 jn :: RoundMode -> Precision -> Int -> Rounded -> Rounded
 jn_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
 
+
 y0 :: RoundMode -> Precision -> Rounded -> Rounded
 y0_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 y1 :: RoundMode -> Precision -> Rounded -> Rounded
 y1_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 yn :: RoundMode -> Precision -> Int -> Rounded -> Rounded
 yn_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
+
+fma :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> Rounded
+fma_ ::
+  RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> (Rounded, Int)
+
+fms :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> Rounded
+fms_ ::
+  RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> (Rounded, Int)
+
+agm :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
+agm_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
+
 
 hypot :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
 hypot_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
@@ -615,114 +738,23 @@ log1p :: RoundMode -> Precision -> Rounded -> Rounded
 log1p_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 
 -}
-
-{- 5.12 Misc functions-}
-
-getExp :: Rounded -> Exp
-getExp (Rounded _ e# _) = I64# e#
-
+{- 5.10 Integer and Remainder related functions -}
 
 {-
-absD :: RoundMode -> Precision -> Rounded -> Rounded
-absD_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-
-agm :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-agm_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-bitsInInteger :: Num a => Integer -> a
-catalan :: RoundMode -> Precision -> Rounded
-catalan_ :: RoundMode -> Precision -> (Rounded, Int)
-cbrt :: RoundMode -> Precision -> Rounded -> Rounded
-cbrt_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+rint :: RoundMode -> Precision -> Rounded -> Rounded
 ceil :: Precision -> Rounded -> Rounded
 ceil_ :: Precision -> Rounded -> (Rounded, Int)
-compose :: RoundMode -> Precision -> (Integer, Int) -> Rounded
-coth :: RoundMode -> Precision -> Rounded -> Rounded
-coth_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-csch :: RoundMode -> Precision -> Rounded -> Rounded
-csch_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-decompose :: Rounded -> (Integer, Exp)
-dim :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-dim_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-
-eint :: RoundMode -> Precision -> Rounded -> Rounded
-eint_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-erf :: RoundMode -> Precision -> Rounded -> Rounded
-erf_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-erfc :: RoundMode -> Precision -> Rounded -> Rounded
-erfc_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-euler :: RoundMode -> Precision -> Rounded
-euler_ :: RoundMode -> Precision -> (Rounded, Int)
-expm1 :: RoundMode -> Precision -> Rounded -> Rounded
-expm1_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-facw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
-facw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
-fitsSInt :: RoundMode -> Rounded -> Bool
-fitsSLong :: RoundMode -> Rounded -> Bool
-fitsSShort :: RoundMode -> Rounded -> Bool
-fitsUInt :: RoundMode -> Rounded -> Bool
-fitsULong :: RoundMode -> Rounded -> Bool
-fitsUShort :: RoundMode -> Rounded -> Bool
 floor :: Precision -> Rounded -> Rounded
 floor_ :: Precision -> Rounded -> (Rounded, Int)
-fma :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> Rounded
-fma_ ::
-  RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> (Rounded, Int)
-fmod :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-fmod_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-fms :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> Rounded
-fms_ ::
-  RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> (Rounded, Int)
-frac :: RoundMode -> Precision -> Rounded -> Rounded
-frac_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
---freeCache :: IO ()
-div2i :: RoundMode -> Precision -> Rounded -> Int -> Rounded
-div2i_ :: RoundMode -> Precision -> Rounded -> Int -> (Rounded, Int)
-div2w :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
-div2w_ :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
+round :: Precision -> Rounded -> Rounded
+round_ :: Precision -> Rounded -> (Rounded, Int)
+trunc :: Precision -> Rounded -> Rounded
+trunc_ :: Precision -> Rounded -> (Rounded, Int)
 
-gamma :: RoundMode -> Precision -> Rounded -> Rounded
-gamma_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-getMantissa :: Rounded -> Integer
-setExp :: Rounded -> Exp -> Rounded
-int2i :: RoundMode -> Precision -> Int -> Int -> Rounded
-int2i_ :: RoundMode -> Precision -> Int -> Int -> (Rounded, Int)
-int2w :: RoundMode -> Precision -> GHC.Types.Word -> Int -> Rounded
-int2w_ :: RoundMode -> Precision -> GHC.Types.Word -> Int -> (Rounded, Int)
+-}
 
-
-
-lgamma :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-lgamma_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int, Int)
-li2 :: RoundMode -> Precision -> Rounded -> Rounded
-li2_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-lngamma :: RoundMode -> Precision -> Rounded -> Rounded
-lngamma_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-maxD :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-maxD_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-maxPrec :: Rounded -> Rounded -> Precision
-minD :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-minD_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-modf :: RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded)
-modf_ ::
-  RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded, Int)
--- newRandomStatePointer ::
---  GHC.Ptr.Ptr hmpfr-0.3.3.5:FFIhelper.GmpRandState
-nextAbove :: Rounded -> Rounded
-nextBelow :: Rounded -> Rounded
-nextToward :: Rounded -> Rounded -> Rounded
-one :: Rounded
-pi :: RoundMode -> Precision -> Rounded
-pi_ :: RoundMode -> Precision -> (Rounded, Int)
-recSqrt :: RoundMode -> Precision -> Rounded -> Rounded
-recSqrt_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-remainder :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-remainder_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-remquo :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-remquo_ ::
-  RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int, Int)
-rint :: RoundMode -> Precision -> Rounded -> Rounded
+{-
+rint_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 rintCeil :: RoundMode -> Precision -> Rounded -> Rounded
 rintCeil_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 rintFloor :: RoundMode -> Precision -> Rounded -> Rounded
@@ -731,36 +763,58 @@ rintRound :: RoundMode -> Precision -> Rounded -> Rounded
 rintRound_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 rintTrunc :: RoundMode -> Precision -> Rounded -> Rounded
 rintTrunc_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-rint_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-root :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
-root_ ::
-  RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
-round :: Precision -> Rounded -> Rounded
-round_ :: Precision -> Rounded -> (Rounded, Int)
-sech :: RoundMode -> Precision -> Rounded -> Rounded
-sech_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-sgn :: Rounded -> Maybe Int
+
+fmod :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
+fmod_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
+
+modf :: RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded)
+modf_ ::
+  RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded, Int)
+frac :: RoundMode -> Precision -> Rounded -> Rounded
+frac_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
+remainder :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
+remainder_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
+remquo :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
+remquo_ ::
+  RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int, Int)
+
+-}
+
+{- 5.11 Rounding related functions -}
+{-
+maxPrec :: Rounded -> Rounded -> Precision
+-}
+
+{- 5.12 Misc functions-}
+
+getExp :: Rounded -> Exp
+getExp (Rounded _ e# _) = I64# e#
+{-
+nextToward :: Rounded -> Rounded -> Rounded
+nextAbove :: Rounded -> Rounded
+nextBelow :: Rounded -> Rounded
 signbit :: Rounded -> Bool
-sqrtw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
-sqrtw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
-tanh :: RoundMode -> Precision -> Rounded -> Rounded
-tanh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-trunc :: Precision -> Rounded -> Rounded
-trunc_ :: Precision -> Rounded -> (Rounded, Int)
+-}
+
+{-
+
+
+bitsInInteger :: Num a => Integer -> a
+
+compose :: RoundMode -> Precision -> (Integer, Int) -> Rounded
+decompose :: Rounded -> (Integer, Exp)
+
+--freeCache :: IO ()
+
+getMantissa :: Rounded -> Integer
+setExp :: Rounded -> Exp -> Rounded
+
+one :: Rounded
+
+-- newRandomStatePointer ::
+--  GHC.Ptr.Ptr hmpfr-0.3.3.5:FFIhelper.GmpRandState
 --urandomb ::
 --  GHC.Ptr.Ptr hmpfr-0.3.3.5:FFIhelper.GmpRandState
 --  -> Precision -> Rounded
-wpow :: RoundMode -> Precision -> GHC.Types.Word -> Rounded -> Rounded
-wpow_ ::
-  RoundMode -> Precision -> GHC.Types.Word -> Rounded -> (Rounded, Int)
-wpoww ::
-  RoundMode -> Precision -> GHC.Types.Word -> GHC.Types.Word -> Rounded
-wpoww_ ::
-  RoundMode
-  -> Precision -> GHC.Types.Word -> GHC.Types.Word -> (Rounded, Int)
-zeta :: RoundMode -> Precision -> Rounded -> Rounded
-zeta_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-zetaw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
-zetaw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
 
 -}
