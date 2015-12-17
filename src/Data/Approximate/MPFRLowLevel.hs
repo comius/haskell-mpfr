@@ -28,144 +28,8 @@ import GHC.Integer.GMP.Internals -- #S, #J
 import GHC.Prim -- Int#, ByteArray#,
 import GHC.Types -- Word
 import GHC.Integer.GMP.Prim (int2Integer#)
-
-{- Basic data -}
-type CPrec#      = Int#
-type CSignPrec#  = Int#
-type CPrecision# = Int#
-type CExp#       = Int#
-type CRounding#  = Int#
-
-data Rounded = Rounded
-  { roundedSignPrec :: CSignPrec# -- Sign# << 64/32 | Precision#
-  , roundedExp      :: CExp#
-  , roundedLimbs    :: ByteArray#
-  }
-
-{- TODO is squeezing sign and prec together really faster? -}
-
-{- 4.2 Nomenclature and Types - precision -}
-
-{-
-gmp.h:
-#if defined (_CRAY) && ! defined (_CRAYMPP)
-/* plain `int' is much faster (48 bits) */
-#define __GMP_MP_SIZE_T_INT     1
-typedef int                     mp_size_t;
-typedef int                     mp_exp_t;
-#else
-#define __GMP_MP_SIZE_T_INT     0            <---
-typedef long int                mp_size_t
-typedef long int                mp_exp_t;
-#endif
-
-mpfr.h:
-# if __GMP_MP_SIZE_T_INT == 1
-#  define _MPFR_PREC_FORMAT 2
-# else
-#  define _MPFR_PREC_FORMAT 3  <---
-# endif
-
-#elif _MPFR_PREC_FORMAT == 3
-typedef long  mpfr_prec_t;
-
--}
-type Precision = Int
-
-prec# :: Precision -> Int#
-prec# (I# i#) = i#
-
-prec_bit :: Int
-prec_bit
-  | b63 == 0  = b31
-  | otherwise = b63
-  where b63 = bit 63
-        b31 = bit 31
-
-getPrec :: Rounded -> Precision
-getPrec (Rounded s _ _) = (I# s) .&. complement prec_bit
-
-{- 4.4 Rounding Modes -}
-
-{- Haskel model of MPFR precision
-
-Definition of rounding modes (DON'T USE MPFR_RNDNA!).
-
-typedef enum {
-  MPFR_RNDN=0,  /* round to nearest, with ties to even */
-  MPFR_RNDZ,    /* round toward zero */
-  MPFR_RNDU,    /* round toward +Inf */
-  MPFR_RNDD,    /* round toward -Inf */
-  MPFR_RNDA,    /* round away from zero */
-  MPFR_RNDF,    /* faithful rounding (not implemented yet) */
-  MPFR_RNDNA=-1 /* round to nearest, with ties away from zero (mpfr_round) */
-} mpfr_rnd_t;
--}
-data RoundMode
-  = Near
-  | Zero
-  | Up
-  | Down
-  | AwayFromZero
-
-instance Enum RoundMode where
-  toEnum 0 = Near
-  toEnum 1 = Zero
-  toEnum 2 = Up
-  toEnum 3 = Down
-  toEnum 4 = AwayFromZero
-  toEnum 5 = error "RoundMode: Not implemented"
-  toEnum (-1) = error "RoundMode: Don't use!"
-  toEnum _ = error "RoundMode: Unknown"
-
-  fromEnum Near = 0
-  fromEnum Zero = 1
-  fromEnum Up = 2
-  fromEnum Down = 3
-  fromEnum AwayFromZero = 4
-
-mode# :: RoundMode -> Int#
-mode# r = case fromEnum r of
-  I# i# -> i#
-
-{- General types, method signatures -}
-
-
-type Exp = GHC.Int.Int64
-
-type RoundedOut# = (# CSignPrec#, CExp#, ByteArray# #)
-
-type Unary
-  = CRounding# -> CPrec# ->
-    CSignPrec# -> CExp# -> ByteArray# -> RoundedOut#
-
-type Binary
-  = CRounding# -> CPrec# ->
-    CSignPrec# -> CExp# -> ByteArray# ->
-    CSignPrec# -> CExp# -> ByteArray# -> RoundedOut#
-
-
-type Comparison
-  = CSignPrec# -> CExp# -> ByteArray# ->
-    CSignPrec# -> CExp# -> ByteArray# ->
-    Int#
-
-unary :: Unary -> RoundMode -> Precision -> Rounded -> Rounded
-unary f r p (Rounded s e l) = Rounded s' e' l' where
-    (# s', e', l' #) = f (mode# r) (prec# p) s e l
-{-# INLINE unary #-}
-
-
-binary :: Binary -> RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-binary f r p (Rounded s e l) (Rounded s' e' l') = Rounded s'' e'' l'' where
-    (# s'', e'', l'' #) = f (mode# r) (prec# p) s e l s' e' l'
-{-# INLINE binary #-}
-
-
-cmp :: Comparison -> Rounded -> Rounded -> Bool
-cmp f (Rounded s e l) (Rounded s' e' l') = I# (f s e l s' e' l') /= 0
-{-# INLINE cmp #-}
-
+import Data.Approximate.MPFR.Types
+import Data.Approximate.MPFR.Special
 
 {- 5.2 Assignment Functions -}
 
@@ -383,7 +247,8 @@ dsub :: RoundMode -> Precision -> Double -> Rounded -> Rounded
 dsub_ :: RoundMode -> Precision -> Double -> Rounded -> (Rounded, Int)
 isub :: RoundMode -> Precision -> Int -> Rounded -> Rounded
 isub_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
-wsub :: RoundMode -> Precision -> GHC.Types.Word -> Rounded -> Rounded
+ara
+        wsub :: RoundMode -> Precision -> GHC.Types.Word -> Rounded -> Rounded
 wsub_ :: RoundMode -> Precision -> GHC.Types.Word -> Rounded -> (Rounded, Int)
 -}
 
@@ -561,183 +426,6 @@ minD_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 --}
 
 
-{- 5.7 Special Functions -}
-
-foreign import prim "mpfr_cmm_exp" mpfrExp# :: Unary
-foreign import prim "mpfr_cmm_log" mpfrLog# :: Unary
-
-foreign import prim "mpfr_cmm_sin" mpfrSin# :: Unary
-foreign import prim "mpfr_cmm_cos" mpfrCos# :: Unary
-foreign import prim "mpfr_cmm_tan" mpfrTan# :: Unary
-foreign import prim "mpfr_cmm_acos" mpfrASin# :: Unary
-foreign import prim "mpfr_cmm_asin" mpfrACos# :: Unary
-foreign import prim "mpfr_cmm_atan" mpfrATan# :: Unary
-
-
-exp :: RoundMode -> Precision -> Rounded -> Rounded
-exp = unary mpfrExp#
-
-log :: RoundMode -> Precision -> Rounded -> Rounded
-log = unary mpfrLog#
-
-sin :: RoundMode -> Precision -> Rounded -> Rounded
-sin = unary mpfrSin#
-
-cos :: RoundMode -> Precision -> Rounded -> Rounded
-cos = unary mpfrCos#
-
-tan :: RoundMode -> Precision -> Rounded -> Rounded
-tan = unary mpfrTan#
-
-asin :: RoundMode -> Precision -> Rounded -> Rounded
-asin = unary mpfrASin#
-
-acos :: RoundMode -> Precision -> Rounded -> Rounded
-acos = unary mpfrACos#
-
-atan :: RoundMode -> Precision -> Rounded -> Rounded
-atan = unary mpfrATan#
-{-
-log_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-log10 :: RoundMode -> Precision -> Rounded -> Rounded
-log10_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-log2 :: RoundMode -> Precision -> Rounded -> Rounded
-log2_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-catalan :: RoundMode -> Precision -> Rounded
-catalan_ :: RoundMode -> Precision -> (Rounded, Int)
-pi :: RoundMode -> Precision -> Rounded
-pi_ :: RoundMode -> Precision -> (Rounded, Int)
-euler :: RoundMode -> Precision -> Rounded
-euler_ :: RoundMode -> Precision -> (Rounded, Int)
-
-
-exp_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-exp10 :: RoundMode -> Precision -> Rounded -> Rounded
-exp10_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-exp2 :: RoundMode -> Precision -> Rounded -> Rounded
-exp2_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-cos_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-sin_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-tan_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-sincos :: RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded)
-sincos_ :: RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded, Int)
-
-sec :: RoundMode -> Precision -> Rounded -> Rounded
-sec_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-csc :: RoundMode -> Precision -> Rounded -> Rounded
-csc_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-cot :: RoundMode -> Precision -> Rounded -> Rounded
-cot_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-acos_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-asin_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-atan_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-atan2 ::
-  RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-atan2_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-
-cosh :: RoundMode -> Precision -> Rounded -> Rounded
-cosh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-
-acosh :: RoundMode -> Precision -> Rounded -> Rounded
-acosh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-asinh :: RoundMode -> Precision -> Rounded -> Rounded
-asinh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-sinh :: RoundMode -> Precision -> Rounded -> Rounded
-sinh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-tanh :: RoundMode -> Precision -> Rounded -> Rounded
-tanh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-sinhcosh ::
-  RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded)
-sinhcosh_ ::
-  RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded, Int)
-
-sech :: RoundMode -> Precision -> Rounded -> Rounded
-sech_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-csch :: RoundMode -> Precision -> Rounded -> Rounded
-csch_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-coth :: RoundMode -> Precision -> Rounded -> Rounded
-coth_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-
-atanh :: RoundMode -> Precision -> Rounded -> Rounded
-atanh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-facw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
-facw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
-
-expm1 :: RoundMode -> Precision -> Rounded -> Rounded
-expm1_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-eint :: RoundMode -> Precision -> Rounded -> Rounded
-eint_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-
-li2 :: RoundMode -> Precision -> Rounded -> Rounded
-li2_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-gamma :: RoundMode -> Precision -> Rounded -> Rounded
-gamma_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-lngamma :: RoundMode -> Precision -> Rounded -> Rounded
-lngamma_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-lgamma :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-lgamma_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int, Int)
-
-zeta :: RoundMode -> Precision -> Rounded -> Rounded
-zeta_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-zetaw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
-zetaw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
-
-erf :: RoundMode -> Precision -> Rounded -> Rounded
-erf_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-erfc :: RoundMode -> Precision -> Rounded -> Rounded
-erfc_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-
-j0 :: RoundMode -> Precision -> Rounded -> Rounded
-j0_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-j1 :: RoundMode -> Precision -> Rounded -> Rounded
-j1_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-jn :: RoundMode -> Precision -> Int -> Rounded -> Rounded
-jn_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
-
-
-y0 :: RoundMode -> Precision -> Rounded -> Rounded
-y0_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-y1 :: RoundMode -> Precision -> Rounded -> Rounded
-y1_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-yn :: RoundMode -> Precision -> Int -> Rounded -> Rounded
-yn_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
-
-fma :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> Rounded
-fma_ ::
-  RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> (Rounded, Int)
-
-fms :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> Rounded
-fms_ ::
-  RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> (Rounded, Int)
-
-agm :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-agm_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-
-
-hypot :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-hypot_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-
-
-log2c :: RoundMode -> Precision -> Rounded
-log2c_ :: RoundMode -> Precision -> (Rounded, Int)
-log1p :: RoundMode -> Precision -> Rounded -> Rounded
-log1p_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
--}
 {- 5.10 Integer and Remainder related functions -}
 
 {-
@@ -787,16 +475,27 @@ maxPrec :: Rounded -> Rounded -> Precision
 
 {- 5.12 Misc functions-}
 
-getExp :: Rounded -> Exp
-getExp (Rounded _ e# _) = I64# e#
 {-
 nextToward :: Rounded -> Rounded -> Rounded
 nextAbove :: Rounded -> Rounded
 nextBelow :: Rounded -> Rounded
-signbit :: Rounded -> Bool
+
+-- newRandomStatePointer ::
+--  GHC.Ptr.Ptr hmpfr-0.3.3.5:FFIhelper.GmpRandState
+--urandomb ::
+--  GHC.Ptr.Ptr hmpfr-0.3.3.5:FFIhelper.GmpRandState
+--  -> Precision -> Rounded
+
 -}
 
+
+getExp :: Rounded -> Exp
+getExp (Rounded _ e# _) = I64# e#
+
 {-
+setExp :: Rounded -> Exp -> Rounded
+
+signbit :: Rounded -> Bool
 
 
 bitsInInteger :: Num a => Integer -> a
@@ -807,14 +506,8 @@ decompose :: Rounded -> (Integer, Exp)
 --freeCache :: IO ()
 
 getMantissa :: Rounded -> Integer
-setExp :: Rounded -> Exp -> Rounded
 
 one :: Rounded
 
--- newRandomStatePointer ::
---  GHC.Ptr.Ptr hmpfr-0.3.3.5:FFIhelper.GmpRandState
---urandomb ::
---  GHC.Ptr.Ptr hmpfr-0.3.3.5:FFIhelper.GmpRandState
---  -> Precision -> Rounded
 
 -}
