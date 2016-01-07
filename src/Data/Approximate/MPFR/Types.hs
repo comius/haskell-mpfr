@@ -7,7 +7,7 @@
         -- |
 
 module Data.Approximate.MPFR.Types (
-   unary, binary, cmp, Rounded (..), RoundMode (..), Precision, Unary, Binary, Comparison, CExp#, CPrec#, CSignPrec#, mode#, prec#, RoundedOut#, CRounding#, Exp, CPrecision#, getPrec
+   unary, unary_,binary,binary_, cmp, Rounded (..), RoundMode (..), Precision, Unary, Binary, Comparison, CExp#, CPrec#, CSignPrec#, mode#, prec#, RoundedOut#, CRounding#, Exp, CPrecision#, getPrec
 ) where
 import Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan)
 import Data.Bits
@@ -120,15 +120,25 @@ mode# r = case fromEnum r of
 type Exp = GHC.Int.Int64
 
 type RoundedOut# = (# CSignPrec#, CExp#, ByteArray# #)
+type RoundedOut_# = (# CSignPrec#, CExp#, ByteArray#, Int# #)
 
 type Unary
   = CRounding# -> CPrec# ->
     CSignPrec# -> CExp# -> ByteArray# -> RoundedOut#
 
+type Unary_
+  = CRounding# -> CPrec# ->
+    CSignPrec# -> CExp# -> ByteArray# -> RoundedOut_#
+
 type Binary
   = CRounding# -> CPrec# ->
     CSignPrec# -> CExp# -> ByteArray# ->
     CSignPrec# -> CExp# -> ByteArray# -> RoundedOut#
+
+type Binary_
+  = CRounding# -> CPrec# ->
+    CSignPrec# -> CExp# -> ByteArray# ->
+    CSignPrec# -> CExp# -> ByteArray# -> RoundedOut_#
 
 
 type Comparison
@@ -141,11 +151,21 @@ unary f r p (Rounded s e l) = Rounded s' e' l' where
     (# s', e', l' #) = f (mode# r) (prec# p) s e l
 {-# INLINE unary #-}
 
+unary_ :: Unary_ -> RoundMode -> Precision -> Rounded -> ( Rounded, Int )
+unary_ f r p (Rounded s e l) = ( Rounded s' e' l', I# t) where
+    (# s', e', l', t #) = f (mode# r) (prec# p) s e l
+{-# INLINE unary_ #-}
+
 
 binary :: Binary -> RoundMode -> Precision -> Rounded -> Rounded -> Rounded
 binary f r p (Rounded s e l) (Rounded s' e' l') = Rounded s'' e'' l'' where
     (# s'', e'', l'' #) = f (mode# r) (prec# p) s e l s' e' l'
 {-# INLINE binary #-}
+
+binary_ :: Binary_ -> RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
+binary_ f r p (Rounded s e l) (Rounded s' e' l') = (Rounded s'' e'' l'', I# t) where
+    (# s'', e'', l'', t #) = f (mode# r) (prec# p) s e l s' e' l'
+{-# INLINE binary_ #-}
 
 
 cmp :: Comparison -> Rounded -> Rounded -> Bool

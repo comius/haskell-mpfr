@@ -29,6 +29,21 @@ TODO: check if MPFR_DECL_INIT gives better results than mpfr_init2
     MPFR__mpfr_exp(mpfr),                                         \
     MPFR_UNMANGLE_PTR(MPFR__mpfr_d(mpfr)) - SIZEOF_StgArrWords);
 
+#define MPFR_RETURN1_(mpfr,ternary)                               \
+  W_ sign_prec;                                                   \
+  if (MPFR__mpfr_sign(mpfr) <= 1) {                               \
+    sign_prec = MPFR__mpfr_prec(mpfr);                            \
+  } else {                                                        \
+    sign_prec = MPFR__mpfr_prec(mpfr) | (1 << PREC_SHIFT);        \
+  }                                                               \
+                                                                  \
+  return(                                                         \
+    sign_prec,                                                    \
+    MPFR__mpfr_exp(mpfr),                                         \
+    MPFR_UNMANGLE_PTR(MPFR__mpfr_d(mpfr)) - SIZEOF_StgArrWords,   \
+    ternary);
+
+
 mpfr_cmm_init_si(W_ rnd, W_ prec, W_ i)
 {
   /* arguments: R1 = rounding, R2 = precision, R3 = int */
@@ -373,7 +388,27 @@ again:                                                            \
   ccall mpfr_fun(ret "ptr", op1 "ptr", rnd);                      \
                                                                   \
   MPFR_RETURN1(ret);                                              \
+}                                                                 \
+name##_(W_ rnd, W_ prec, W_ ps, W_ exp, P_ limbs)                 \
+{                                                                 \
+  W_ rnd, op1, ret, ternary;                                      \
+                                                                  \
+again:                                                            \
+  STK_CHK_GEN_N(2 * SIZEOF_MPFR);                                 \
+  MAYBE_GC(again);                                                \
+                                                                  \
+  op1 = Sp - 1 * SIZEOF_MPFR;                                     \
+  ret = Sp - 2 * SIZEOF_MPFR;                                     \
+                                                                  \
+  MPFR_REBUILD(ps, exp, limbs, op1);                              \
+                                                                  \
+  ccall mpfr_init2(ret "ptr", prec);                              \
+  (ternary) = ccall mpfr_fun(ret "ptr", op1 "ptr", rnd);          \
+                                                                  \
+  MPFR_RETURN1_(ret, ternary);                                    \
 }
+
+
 
 MPFR_TAKE1_RET1(mpfr_cmm_set,  mpfr_set)
 MPFR_TAKE1_RET1(mpfr_cmm_neg,  mpfr_neg)

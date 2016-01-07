@@ -22,8 +22,8 @@ foreign import prim "mpfr_cmm_asin" mpfrACos# :: Unary
 foreign import prim "mpfr_cmm_atan" mpfrATan# :: Unary
 
 
---exp :: RoundMode -> Precision -> Rounded -> Rounded
---exp = unary mpfrExp#
+exp :: RoundMode -> Precision -> Rounded -> Rounded
+exp = unary mpfrExp#
 
 log :: RoundMode -> Precision -> Rounded -> Rounded
 log = unary mpfrLog#
