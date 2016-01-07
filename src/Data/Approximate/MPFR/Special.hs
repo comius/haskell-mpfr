@@ -13,44 +13,123 @@ import Data.Approximate.MPFR.Types
 {- 5.7 Special Functions -}
 
 foreign import prim "mpfr_cmm_exp" mpfrExp# :: Unary
-foreign import prim "mpfr_cmm_log" mpfrLog# :: Unary
-foreign import prim "mpfr_cmm_sin" mpfrSin# :: Unary
-foreign import prim "mpfr_cmm_cos" mpfrCos# :: Unary
-foreign import prim "mpfr_cmm_tan" mpfrTan# :: Unary
-foreign import prim "mpfr_cmm_acos" mpfrASin# :: Unary
-foreign import prim "mpfr_cmm_asin" mpfrACos# :: Unary
-foreign import prim "mpfr_cmm_atan" mpfrATan# :: Unary
-
-
-exp :: RoundMode -> Precision -> Rounded -> Rounded
 exp = unary mpfrExp#
 
-log :: RoundMode -> Precision -> Rounded -> Rounded
+foreign import prim "mpfr_cmm_log" mpfrLog# :: Unary
 log = unary mpfrLog#
 
-sin :: RoundMode -> Precision -> Rounded -> Rounded
+foreign import prim "mpfr_cmm_sin" mpfrSin# :: Unary
 sin = unary mpfrSin#
 
-cos :: RoundMode -> Precision -> Rounded -> Rounded
+foreign import prim "mpfr_cmm_cos" mpfrCos# :: Unary
 cos = unary mpfrCos#
 
-tan :: RoundMode -> Precision -> Rounded -> Rounded
+foreign import prim "mpfr_cmm_tan" mpfrTan# :: Unary
 tan = unary mpfrTan#
 
-asin :: RoundMode -> Precision -> Rounded -> Rounded
+foreign import prim "mpfr_cmm_acos" mpfrASin# :: Unary
 asin = unary mpfrASin#
 
-acos :: RoundMode -> Precision -> Rounded -> Rounded
+foreign import prim "mpfr_cmm_asin" mpfrACos# :: Unary
 acos = unary mpfrACos#
 
-atan :: RoundMode -> Precision -> Rounded -> Rounded
+foreign import prim "mpfr_cmm_atan" mpfrATan# :: Unary
 atan = unary mpfrATan#
+
+foreign import prim "mpfr_cmm_log10" mpfrLog10# :: Unary
+log10 = unary mpfrLog10#
+
+foreign import prim "mpfr_cmm_log2" mpfrLog2# :: Unary
+log2 = unary mpfrLog2#
+
+foreign import prim "mpfr_cmm_exp10" mpfrExp10# :: Unary
+exp10 = unary mpfrExp10#
+
+foreign import prim "mpfr_cmm_exp2" mpfrExp2# :: Unary
+exp2 = unary mpfrExp2#
+
+foreign import prim "mpfr_cmm_sec" mpfrSec# :: Unary
+sec = unary mpfrSec#
+
+foreign import prim "mpfr_cmm_csc" mpfrCsc# :: Unary
+csc = unary mpfrCsc#
+
+foreign import prim "mpfr_cmm_cot" mpfrCot# :: Unary
+cot = unary mpfrCot#
+
+foreign import prim "mpfr_cmm_cosh" mpfrCosh# :: Unary
+cosh = unary mpfrCosh#
+
+foreign import prim "mpfr_cmm_acosh" mpfrACosh# :: Unary
+acosh = unary mpfrACosh#
+
+foreign import prim "mpfr_cmm_asinh" mpfrASinh# :: Unary
+asinh = unary mpfrASinh#
+
+foreign import prim "mpfr_cmm_sinh" mpfrSinh# :: Unary
+sinh = unary mpfrSinh#
+
+foreign import prim "mpfr_cmm_tanh" mpfrTanh# :: Unary
+tanh = unary mpfrTanh#
+
+foreign import prim "mpfr_cmm_sech" mpfrSech# :: Unary
+sech = unary mpfrSech#
+
+foreign import prim "mpfr_cmm_csch" mpfrCsch# :: Unary
+csch = unary mpfrCsch#
+
+foreign import prim "mpfr_cmm_coth" mpfrCoth# :: Unary
+coth = unary mpfrCoth#
+
+foreign import prim "mpfr_cmm_atanh" mpfrATanh# :: Unary
+atanh = unary mpfrATanh#
+
+foreign import prim "mpfr_cmm_expm1" mpfrExpm1# :: Unary
+expm1 = unary mpfrExpm1#
+
+foreign import prim "mpfr_cmm_eint" mpfreint# :: Unary
+eint = unary mpfreint#
+
+foreign import prim "mpfr_cmm_li2" mpfrli2# :: Unary
+li2 = unary mpfrli2#
+
+foreign import prim "mpfr_cmm_gamma" mpfrgamma# :: Unary
+gamma = unary mpfrgamma#
+
+foreign import prim "mpfr_cmm_lngamma" mpfrlngamma# :: Unary
+lngamma = unary mpfrlngamma#
+
+foreign import prim "mpfr_cmm_lgamma" mpfrlgamma# :: Unary
+lgamma = unary mpfrlgamma#
+
+foreign import prim "mpfr_cmm_zeta" mpfrzeta# :: Unary
+zeta = unary mpfrzeta#
+
+foreign import prim "mpfr_cmm_zetaw" mpfrzetaw# :: Unary
+zetaw = unary mpfrzetaw#
+
+foreign import prim "mpfr_cmm_erf" mpfrerf# :: Unary
+erf = unary mpfrerf#
+
+foreign import prim "mpfr_cmm_erfc" mpfrerfc# :: Unary
+erfc = unary mpfrerfc#
+
+foreign import prim "mpfr_cmm_j0" mpfrj0# :: Unary
+j0 = unary mpfrj0#
+
+foreign import prim "mpfr_cmm_j1" mpfrj1# :: Unary
+j1 = unary mpfrj1#
+
+foreign import prim "mpfr_cmm_y0" mpfry0# :: Unary
+y0 = unary mpfry0#
+
+foreign import prim "mpfr_cmm_y1" mpfry1# :: Unary
+y1 = unary mpfry1#
+
+foreign import prim "mpfr_cmm_log1p" mpfrlog1p# :: Unary
+log1p = unary mpfrlog1p#
+
 {-
-log_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-log10 :: RoundMode -> Precision -> Rounded -> Rounded
-log10_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-log2 :: RoundMode -> Precision -> Rounded -> Rounded
-log2_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 catalan :: RoundMode -> Precision -> Rounded
 catalan_ :: RoundMode -> Precision -> (Rounded, Int)
 pi :: RoundMode -> Precision -> Rounded
@@ -58,109 +137,27 @@ pi_ :: RoundMode -> Precision -> (Rounded, Int)
 euler :: RoundMode -> Precision -> Rounded
 euler_ :: RoundMode -> Precision -> (Rounded, Int)
 
-
-exp_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-exp10 :: RoundMode -> Precision -> Rounded -> Rounded
-exp10_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-exp2 :: RoundMode -> Precision -> Rounded -> Rounded
-exp2_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-cos_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-sin_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-tan_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
 sincos :: RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded)
 sincos_ :: RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded, Int)
 
-sec :: RoundMode -> Precision -> Rounded -> Rounded
-sec_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-csc :: RoundMode -> Precision -> Rounded -> Rounded
-csc_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-cot :: RoundMode -> Precision -> Rounded -> Rounded
-cot_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-acos_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-asin_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-atan_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 atan2 ::
   RoundMode -> Precision -> Rounded -> Rounded -> Rounded
 atan2_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-
-cosh :: RoundMode -> Precision -> Rounded -> Rounded
-cosh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-
-acosh :: RoundMode -> Precision -> Rounded -> Rounded
-acosh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-asinh :: RoundMode -> Precision -> Rounded -> Rounded
-asinh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-sinh :: RoundMode -> Precision -> Rounded -> Rounded
-sinh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-tanh :: RoundMode -> Precision -> Rounded -> Rounded
-tanh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 
 sinhcosh ::
   RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded)
 sinhcosh_ ::
   RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded, Int)
 
-sech :: RoundMode -> Precision -> Rounded -> Rounded
-sech_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-csch :: RoundMode -> Precision -> Rounded -> Rounded
-csch_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-coth :: RoundMode -> Precision -> Rounded -> Rounded
-coth_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-
-atanh :: RoundMode -> Precision -> Rounded -> Rounded
-atanh_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
 facw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
 facw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
 
-expm1 :: RoundMode -> Precision -> Rounded -> Rounded
-expm1_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-eint :: RoundMode -> Precision -> Rounded -> Rounded
-eint_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-
-li2 :: RoundMode -> Precision -> Rounded -> Rounded
-li2_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-gamma :: RoundMode -> Precision -> Rounded -> Rounded
-gamma_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-lngamma :: RoundMode -> Precision -> Rounded -> Rounded
-lngamma_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-lgamma :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-lgamma_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int, Int)
-
-zeta :: RoundMode -> Precision -> Rounded -> Rounded
-zeta_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 zetaw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
 zetaw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
 
-erf :: RoundMode -> Precision -> Rounded -> Rounded
-erf_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-erfc :: RoundMode -> Precision -> Rounded -> Rounded
-erfc_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-
-j0 :: RoundMode -> Precision -> Rounded -> Rounded
-j0_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-j1 :: RoundMode -> Precision -> Rounded -> Rounded
-j1_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 jn :: RoundMode -> Precision -> Int -> Rounded -> Rounded
 jn_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
 
-
-y0 :: RoundMode -> Precision -> Rounded -> Rounded
-y0_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-y1 :: RoundMode -> Precision -> Rounded -> Rounded
-y1_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 yn :: RoundMode -> Precision -> Int -> Rounded -> Rounded
 yn_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
 
@@ -175,14 +172,10 @@ fms_ ::
 agm :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
 agm_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 
-
 hypot :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
 hypot_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 
-
 log2c :: RoundMode -> Precision -> Rounded
 log2c_ :: RoundMode -> Precision -> (Rounded, Int)
-log1p :: RoundMode -> Precision -> Rounded -> Rounded
-log1p_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 
 -}
