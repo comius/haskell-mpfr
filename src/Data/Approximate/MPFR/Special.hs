@@ -105,9 +105,6 @@ lgamma = unary mpfrlgamma#
 foreign import prim "mpfr_cmm_zeta" mpfrzeta# :: Unary
 zeta = unary mpfrzeta#
 
-foreign import prim "mpfr_cmm_zetaw" mpfrzetaw# :: Unary
-zetaw = unary mpfrzetaw#
-
 foreign import prim "mpfr_cmm_erf" mpfrerf# :: Unary
 erf = unary mpfrerf#
 
@@ -177,5 +174,8 @@ hypot_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 
 log2c :: RoundMode -> Precision -> Rounded
 log2c_ :: RoundMode -> Precision -> (Rounded, Int)
+
+--foreign import prim "mpfr_cmm_zetaw" mpfrzetaw# :: Unary
+--zetaw = unary mpfrzetaw#
 
 -}
