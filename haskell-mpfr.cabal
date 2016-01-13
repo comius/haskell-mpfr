@@ -11,7 +11,9 @@ copyright:          Copyright (C) 2012-2015 Edward A. Kmett, Daniel G. Peebles, 
 category:           Numeric, Math
 build-type:         Custom
 cabal-version:      >= 1.22
-tested-with:        GHC == 7.8.1, GHC == 7.8.4
+tested-with:        
+                    GHC == 7.8.1,
+                    GHC == 7.8.4
 extra-source-files: cbits/mkMpfrDerivedConstants.c, cbits/alloc.c
 description:
     This package imports functions from MPFR to Haskell in the same way as GMP is alreay imported.
@@ -23,7 +25,10 @@ source-repository head
 
 library
   exposed-modules:
-    Data.Approximate.MPFRLowLevel
+    Data.Approximate.MPFRLowLevel,
+    Data.Approximate.MPFR.Types,
+    Data.Approximate.MPFR.Special
+    
 
   build-depends:
     base             >= 4.7     && < 5,
