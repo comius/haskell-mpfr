@@ -7,7 +7,7 @@
         -- |
 
 module Data.Approximate.MPFR.Types (
-   unary, unary_,binary,binary_, cmp, Rounded (..), RoundMode (..), Precision, Unary, Binary, Comparison, CExp#, CPrec#, CSignPrec#, mode#, prec#, RoundedOut#, CRounding#, Exp, CPrecision#, getPrec
+   constf, unary, unary2, unary_,binary,binary_, cmp, Rounded (..), RoundMode (..), Precision, Const, Unary, Unary2, Binary, Comparison, CExp#, CPrec#, CSignPrec#, mode#, prec#, RoundedOut#, CRounding#, Exp, CPrecision#, getPrec
 ) where
 import Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan)
 import Data.Bits
@@ -122,9 +122,18 @@ type Exp = GHC.Int.Int64
 type RoundedOut# = (# CSignPrec#, CExp#, ByteArray# #)
 type RoundedOut_# = (# CSignPrec#, CExp#, ByteArray#, Int# #)
 
+type RoundedOut2# = (# CSignPrec#, CExp#, ByteArray#, CSignPrec#, CExp#, ByteArray# #)
+
+type Const
+  = CRounding# -> CPrec# -> RoundedOut#
+
 type Unary
   = CRounding# -> CPrec# ->
     CSignPrec# -> CExp# -> ByteArray# -> RoundedOut#
+
+type Unary2
+  = CRounding# -> CPrec# ->
+    CSignPrec# -> CExp# -> ByteArray# -> RoundedOut2#
 
 type Unary_
   = CRounding# -> CPrec# ->
@@ -146,10 +155,21 @@ type Comparison
     CSignPrec# -> CExp# -> ByteArray# ->
     Int#
 
+constf :: Const -> RoundMode -> Precision -> Rounded
+constf f r p = Rounded s' e' l' where
+    (# s', e', l' #) = f (mode# r) (prec# p)
+{-# INLINE constf #-}
+
+
 unary :: Unary -> RoundMode -> Precision -> Rounded -> Rounded
 unary f r p (Rounded s e l) = Rounded s' e' l' where
     (# s', e', l' #) = f (mode# r) (prec# p) s e l
 {-# INLINE unary #-}
+
+unary2 :: Unary2 -> RoundMode -> Precision -> Rounded -> (Rounded, Rounded)
+unary2 f r p (Rounded s e l) = (Rounded s1' e1' l1', Rounded s2' e2' l2') where
+    (# s1', e1', l1', s2', e2', l2' #) = f (mode# r) (prec# p) s e l
+{-# INLINE unary2 #-}
 
 unary_ :: Unary_ -> RoundMode -> Precision -> Rounded -> ( Rounded, Int )
 unary_ f r p (Rounded s e l) = ( Rounded s' e' l', I# t) where

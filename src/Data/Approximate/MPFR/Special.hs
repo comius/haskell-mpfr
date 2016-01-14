@@ -26,12 +26,29 @@ foreign import prim LONGNAME(name) mpfr##name :: Binary \
 name :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded \
 name = binary mpfr##name 
 
-#define CONST(name)
-#define UNARY2(name)
+#define CONST(name) \
+foreign import prim LONGNAME(name) mpfr##name :: Const \
+name :: RoundMode -> Precision -> Rounded \
+name = constf mpfr##name 
+
+#define UNARY2(name) \
+foreign import prim LONGNAME(name) mpfr##name :: Unary2 \
+name :: RoundMode -> Precision -> Rounded -> (Rounded, Rounded) \
+name = unary2 mpfr##name 
+
+
 #define TRINARY(name)
 
 
 #include "special.h"
+
+sincos = sin_cos
+sincosh = sinh_cosh
+pi=const_pi
+euler=const_euler
+log2c=const_log2
+catalan=const_catalan
+
 
 {-
 facw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded

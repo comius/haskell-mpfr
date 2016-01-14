@@ -39,18 +39,18 @@ UNARY(y1)
 UNARY(log1p)
 
 
-CONST(catalan)
-CONST(pi)
-CONST(euler)
+CONST(const_catalan)
+CONST(const_pi)
+CONST(const_euler)
 
-UNARY2(sincos)
+UNARY2(sin_cos)
 BINARY(atan2)
-UNARY2(sincosh)
+UNARY2(sinh_cosh)
 
 TRINARY(fma)
 TRINARY(fms)
 BINARY(agm)
 BINARY(hypot)
 
-CONST(log2c)
+CONST(const_log2)
 

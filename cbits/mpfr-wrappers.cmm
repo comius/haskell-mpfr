@@ -43,6 +43,27 @@ TODO: check if MPFR_DECL_INIT gives better results than mpfr_init2
     MPFR_UNMANGLE_PTR(MPFR__mpfr_d(mpfr)) - SIZEOF_StgArrWords,   \
     ternary);
 
+#define MPFR_RETURN2(mpfr1, mpfr2)                                \
+  W_ sign_prec1;                                                  \
+  if (MPFR__mpfr_sign(mpfr1) <= 1) {                              \
+    sign_prec1 = MPFR__mpfr_prec(mpfr1);                          \
+  } else {                                                        \
+    sign_prec1 = MPFR__mpfr_prec(mpfr1) | (1 << PREC_SHIFT);      \
+  }                                                               \
+  W_ sign_prec2;                                                  \
+  if (MPFR__mpfr_sign(mpfr2) <= 1) {                              \
+    sign_prec2 = MPFR__mpfr_prec(mpfr2);                          \
+  } else {                                                        \
+    sign_prec2 = MPFR__mpfr_prec(mpfr2) | (1 << PREC_SHIFT);      \
+  }                                                               \
+                                                                  \
+  return(                                                         \
+    sign_prec1,                                                   \
+    MPFR__mpfr_exp(mpfr1),                                        \
+    MPFR_UNMANGLE_PTR(MPFR__mpfr_d(mpfr1)) - SIZEOF_StgArrWords,  \
+    sign_prec2,                                                   \
+    MPFR__mpfr_exp(mpfr2),                                        \
+    MPFR_UNMANGLE_PTR(MPFR__mpfr_d(mpfr2)) - SIZEOF_StgArrWords);
 
 mpfr_cmm_init_si(W_ rnd, W_ prec, W_ i)
 {
@@ -339,6 +360,31 @@ again:                                                               \
   MPFR_RETURN1(ret);                                                 \
 }
 
+#define MPFR_TAKE3_RET1(name,mpfr_fun)                               \
+name(W_ rnd, W_ prec, W_ ps1, W_ exp1, P_ limbs1, W_ ps2, W_ exp2, P_ limbs2, W_ ps3, W_ exp3, P_ limbs3) \
+{                                                                    \
+  W_ op1, op2, op3, ret;                                       \
+                                                                     \
+again:                                                               \
+  STK_CHK_GEN_N(4 * SIZEOF_MPFR);                                    \
+  MAYBE_GC(again);                                                   \
+                                                                     \
+  op1 = Sp - 1 * SIZEOF_MPFR;                                        \
+  op2 = Sp - 2 * SIZEOF_MPFR;                                        \
+  op3 = Sp - 3 * SIZEOF_MPFR;                                        \
+  ret = Sp - 4 * SIZEOF_MPFR;                                        \
+                                                                     \
+  MPFR_REBUILD(ps1, exp1, limbs1, op1);                              \
+  MPFR_REBUILD(ps2, exp2, limbs2, op2);                              \
+  MPFR_REBUILD(ps3, exp3, limbs3, op3);                              \
+                                                                     \
+  ccall mpfr_init2(ret "ptr", prec);                                 \
+  ccall mpfr_fun(ret "ptr", op1 "ptr", op2 "ptr", op3 "ptr", rnd);   \
+                                                                     \
+  MPFR_RETURN1(ret);                                                 \
+}
+
+
 MPFR_TAKE2_RET1(mpfr_cmm_add, mpfr_add)
 MPFR_TAKE2_RET1(mpfr_cmm_sub, mpfr_sub)
 MPFR_TAKE2_RET1(mpfr_cmm_pow, mpfr_pow)
@@ -407,23 +453,6 @@ again:                                                            \
   MPFR_RETURN1_(ret, ternary);                                    \
 }
 
-
-
-MPFR_TAKE1_RET1(mpfr_cmm_set,  mpfr_set)
-MPFR_TAKE1_RET1(mpfr_cmm_neg,  mpfr_neg)
-MPFR_TAKE1_RET1(mpfr_cmm_sqr, mpfr_sqr)
-MPFR_TAKE1_RET1(mpfr_cmm_sqrt, mpfr_sqrt)
-
-
-#define UNARY(name) MPFR_TAKE1_RET1(mpfr_cmm_##name, mpfr_##name) 
-#define BINARY(name) MPFR_TAKE2_RET1(mpfr_cmm_##name, mpfr_##name)
-#define CONST(name)
-#define UNARY2(name)
-#define TRINARY(name)
-
-#include "../../src/Data/Approximate/MPFR/special.h"
-
-
 #define MPFR_CONSTANT(name,mpfr_constant)                        \
 name(W_ rnd, W_ prec)                                            \
 {                                                                \
@@ -436,7 +465,41 @@ name(W_ rnd, W_ prec)                                            \
   MPFR_RETURN1(mpfr);                                            \
 }
 
-MPFR_CONSTANT(mpfr_cmm_const_pi, mpfr_const_pi)
-MPFR_CONSTANT(mpfr_cmm_const_log2, mpfr_const_log2)
-MPFR_CONSTANT(mpfr_cmm_const_euler, mpfr_const_euler)
-MPFR_CONSTANT(mpfr_cmm_const_catalan, mpfr_const_catalan)
+
+#define MPFR_TAKE1_RET2(name,mpfr_fun)                            \
+name(W_ rnd, W_ prec1, W_ prec2, W_ ps, W_ exp, P_ limbs)         \
+{                                                                 \
+  W_ rnd, op1, ret1, ret2;                                        \
+                                                                  \
+again:                                                            \
+  STK_CHK_GEN_N(3 * SIZEOF_MPFR);                                 \
+  MAYBE_GC(again);                                                \
+                                                                  \
+  op1 = Sp - 1 * SIZEOF_MPFR;                                     \
+  ret1 = Sp - 2 * SIZEOF_MPFR;                                    \
+  ret2 = Sp - 3 * SIZEOF_MPFR;                                    \
+                                                                  \
+  MPFR_REBUILD(ps, exp, limbs, op1);                              \
+                                                                  \
+  ccall mpfr_init2(ret1 "ptr", prec1);                            \
+  ccall mpfr_init2(ret2 "ptr", prec2);                            \
+  ccall mpfr_fun(ret1 "ptr", ret2 "ptr", op1 "ptr", rnd);         \
+                                                                  \
+  MPFR_RETURN2(ret1,ret2);                                        \
+}
+
+
+MPFR_TAKE1_RET1(mpfr_cmm_set,  mpfr_set)
+MPFR_TAKE1_RET1(mpfr_cmm_neg,  mpfr_neg)
+MPFR_TAKE1_RET1(mpfr_cmm_sqr, mpfr_sqr)
+MPFR_TAKE1_RET1(mpfr_cmm_sqrt, mpfr_sqrt)
+
+
+#define UNARY(name) MPFR_TAKE1_RET1(mpfr_cmm_##name, mpfr_##name) 
+#define BINARY(name) MPFR_TAKE2_RET1(mpfr_cmm_##name, mpfr_##name)
+#define CONST(name) MPFR_CONSTANT(mpfr_cmm_##name, mpfr_##name)
+#define UNARY2(name) MPFR_TAKE1_RET2(mpfr_cmm_##name, mpfr_##name)
+#define TRINARY(name) MPFR_TAKE3_RET1(mpfr_cmm_##name, mpfr_##name)
+
+#include "../../src/Data/Approximate/MPFR/special.h"
+
