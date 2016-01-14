@@ -13,36 +13,27 @@ import Data.Approximate.MPFR.Types
 
 {- 5.7 Special Functions -}
 
+#define STR(s) #s
+#define LONGNAME(name) STR(mpfr_cmm_##name)
 
-#define UNARY2(name, long_name) \
-foreign import prim #long_name mpfr##name :: Unary \
+#define UNARY(name) \
+foreign import prim LONGNAME(name) mpfr##name :: Unary \
 name :: RoundMode -> Precision -> Rounded -> Rounded \
 name = unary mpfr##name 
 
-#define UNARY(name) UNARY2(name,mpfr_cmm_##name) 
+#define BINARY(name) \
+foreign import prim LONGNAME(name) mpfr##name :: Binary \
+name :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded \
+name = binary mpfr##name 
+
+#define CONST(name)
+#define UNARY2(name)
+#define TRINARY(name)
+
 
 #include "special.h"
 
 {-
-catalan :: RoundMode -> Precision -> Rounded
-catalan_ :: RoundMode -> Precision -> (Rounded, Int)
-pi :: RoundMode -> Precision -> Rounded
-pi_ :: RoundMode -> Precision -> (Rounded, Int)
-euler :: RoundMode -> Precision -> Rounded
-euler_ :: RoundMode -> Precision -> (Rounded, Int)
-
-sincos :: RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded)
-sincos_ :: RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded, Int)
-
-atan2 ::
-  RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-atan2_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-
-sinhcosh ::
-  RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded)
-sinhcosh_ ::
-  RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded, Int)
-
 facw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
 facw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
 
@@ -55,24 +46,7 @@ jn_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
 yn :: RoundMode -> Precision -> Int -> Rounded -> Rounded
 yn_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
 
-fma :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> Rounded
-fma_ ::
-  RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> (Rounded, Int)
-
-fms :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> Rounded
-fms_ ::
-  RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> (Rounded, Int)
-
-agm :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-agm_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 
 hypot :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
 hypot_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-
-log2c :: RoundMode -> Precision -> Rounded
-log2c_ :: RoundMode -> Precision -> (Rounded, Int)
-
---foreign import prim "mpfr_cmm_zetaw" mpfrzetaw# :: Unary
---zetaw = unary mpfrzetaw#
-
 -}
