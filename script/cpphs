@@ -1,0 +1,4 @@
+#!/bin/bash
+shift;INF=$1;shift;OUTF=$1;shift
+cpphs $INF $@ --linepragma > $OUTF
+ 
