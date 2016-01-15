@@ -63,7 +63,4 @@ jn_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
 yn :: RoundMode -> Precision -> Int -> Rounded -> Rounded
 yn_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
 
-
-hypot :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-hypot_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 -}
