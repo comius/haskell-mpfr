@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -F -pgmF script/cpphs -optF--layout -optF--hashes #-}
 {- -# LANGUAGE CPP #-}
 {- -# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
@@ -20,7 +21,7 @@ module Data.Approximate.MPFRLowLevel (
   getExp,
   toRationalA, toDoubleA
 ) where
-import Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan, pi)
+import Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan, pi, abs)
 import Data.Bits
 import Data.List (isInfixOf)
 import Data.Ratio
@@ -114,7 +115,6 @@ int2i :: RoundMode -> Precision -> Int -> Int -> Rounded
 int2i_ :: RoundMode -> Precision -> Int -> Int -> (Rounded, Int)
 int2w :: RoundMode -> Precision -> GHC.Types.Word -> Int -> Rounded
 int2w_ :: RoundMode -> Precision -> GHC.Types.Word -> Int -> (Rounded, Int)
-
 -}
 
 {- 5.4 Conversion Functions -}
@@ -218,35 +218,29 @@ toString dec d | isInfixOf "NaN" ss = "NaN"
                                     _   -> ("" , str)
                         backtrim = reverse . dropWhile (== '0') . reverse
 {-
-
-
 fitsSInt :: RoundMode -> Rounded -> Bool
 fitsSLong :: RoundMode -> Rounded -> Bool
 fitsSShort :: RoundMode -> Rounded -> Bool
 fitsUInt :: RoundMode -> Rounded -> Bool
 fitsULong :: RoundMode -> Rounded -> Bool
 fitsUShort :: RoundMode -> Rounded -> Bool
-
 -}
 instance Show Rounded where
     show = toStringExp 16
 
 {- 5.5 Basic Arithmetic Functions -}
 
-foreign import prim "mpfr_cmm_add" mpfrAdd# :: Binary
-foreign import prim "mpfr_cmm_sub" mpfrSub# :: Binary
-foreign import prim "mpfr_cmm_mul" mpfrMul# :: Binary
-foreign import prim "mpfr_cmm_div" mpfrDiv# :: Binary
-foreign import prim "mpfr_cmm_neg" mpfrNeg# :: Unary
-foreign import prim "mpfr_cmm_sqr" mpfrSqr# :: Unary
-foreign import prim "mpfr_cmm_sqrt" mpfrSqrt# :: Unary
-foreign import prim "mpfr_cmm_pow" mpfrPow# :: Binary
 
-add :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-add = binary mpfrAdd#
+#include "MPFR/types.hhs"
+#include "MPFR/arithmetics.h"
+
+recSqrt = rec_sqrt
+absD = abs
+
+mul2i :: RoundMode -> Precision -> Rounded -> Int -> Rounded
+mul2i r p (Rounded s e l) (I# i) = Rounded s (e +# i) l
 
 {-
-add_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 addd :: RoundMode -> Precision -> Rounded -> Double -> Rounded
 addd_ :: RoundMode -> Precision -> Rounded -> Double -> (Rounded, Int)
 addi :: RoundMode -> Precision -> Rounded -> Int -> Rounded
@@ -255,11 +249,7 @@ addw :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
 addw_ :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
 -}
 
-sub :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-sub = binary mpfrSub#
-
 {-
-sub_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 subd :: RoundMode -> Precision -> Rounded -> Double -> Rounded
 subd_ :: RoundMode -> Precision -> Rounded -> Double -> (Rounded, Int)
 subi :: RoundMode -> Precision -> Rounded -> Int -> Rounded
@@ -270,21 +260,12 @@ dsub :: RoundMode -> Precision -> Double -> Rounded -> Rounded
 dsub_ :: RoundMode -> Precision -> Double -> Rounded -> (Rounded, Int)
 isub :: RoundMode -> Precision -> Int -> Rounded -> Rounded
 isub_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
-ara
-        wsub :: RoundMode -> Precision -> GHC.Types.Word -> Rounded -> Rounded
+wsub :: RoundMode -> Precision -> GHC.Types.Word -> Rounded -> Rounded
 wsub_ :: RoundMode -> Precision -> GHC.Types.Word -> Rounded -> (Rounded, Int)
 -}
 
-mul :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-mul = binary mpfrMul#
-
-
-mul2i :: RoundMode -> Precision -> Rounded -> Int -> Rounded
-mul2i r p (Rounded s e l) (I# i) = Rounded s (e +# i) l
-
 {-
 mul2i_ :: RoundMode -> Precision -> Rounded -> Int -> (Rounded, Int)
-mul_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 muld :: RoundMode -> Precision -> Rounded -> Double -> Rounded
 muld_ :: RoundMode -> Precision -> Rounded -> Double -> (Rounded, Int)
 muli :: RoundMode -> Precision -> Rounded -> Int -> Rounded
@@ -293,18 +274,7 @@ mulw :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
 mulw_ :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
 mul2w :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
 mul2w_ :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
--}
 
-sqr :: RoundMode -> Precision -> Rounded -> Rounded
-sqr = unary mpfrSqr#
-{-
-sqr_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
--}
-
-div :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-div = binary mpfrDiv#
-{-
-div_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 divd :: RoundMode -> Precision -> Rounded -> Double -> Rounded
 divd_ :: RoundMode -> Precision -> Rounded -> Double -> (Rounded, Int)
 divi :: RoundMode -> Precision -> Rounded -> Int -> Rounded
@@ -323,47 +293,16 @@ div2w :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
 div2w_ :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
 -}
 
-sqrt :: RoundMode -> Precision -> Rounded -> Rounded
-sqrt = unary mpfrSqrt#
---sqrt_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 {-
-recSqrt :: RoundMode -> Precision -> Rounded -> Rounded
-recSqrt_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
 sqrtw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
 sqrtw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
-
-cbrt :: RoundMode -> Precision -> Rounded -> Rounded
-cbrt_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 root :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
 root_ ::
   RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
---}
-
-
-pow :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-pow = binary mpfrPow#
-
-{-
-pow_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 powi :: RoundMode -> Precision -> Rounded -> Int -> Rounded
 powi_ :: RoundMode -> Precision -> Rounded -> Int -> (Rounded, Int)
 poww :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
 poww_ :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
--}
-
-neg :: RoundMode -> Precision -> Rounded -> Rounded
-neg = unary mpfrNeg#
-
-{- neg_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int) --}
-{-
-absD :: RoundMode -> Precision -> Rounded -> Rounded
-absD_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
--}
-
-{-
-dim :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-dim_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 
 wpow :: RoundMode -> Precision -> GHC.Types.Word -> Rounded -> Rounded
 wpow_ ::
@@ -373,7 +312,6 @@ wpoww ::
 wpoww_ ::
   RoundMode
   -> Precision -> GHC.Types.Word -> GHC.Types.Word -> (Rounded, Int)
-
 -}
 
 {- 5.6 Comparison Functions -}

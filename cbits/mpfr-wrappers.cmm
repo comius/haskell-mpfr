@@ -385,11 +385,6 @@ again:                                                               \
 }
 
 
-MPFR_TAKE2_RET1(mpfr_cmm_add, mpfr_add)
-MPFR_TAKE2_RET1(mpfr_cmm_sub, mpfr_sub)
-MPFR_TAKE2_RET1(mpfr_cmm_pow, mpfr_pow)
-MPFR_TAKE2_RET1(mpfr_cmm_mul, mpfr_mul)
-MPFR_TAKE2_RET1(mpfr_cmm_div, mpfr_div)
 MPFR_TAKE2_RET1(mpfr_cmm_min, mpfr_min)
 MPFR_TAKE2_RET1(mpfr_cmm_max, mpfr_max)
 
@@ -490,9 +485,7 @@ again:                                                            \
 
 
 MPFR_TAKE1_RET1(mpfr_cmm_set,  mpfr_set)
-MPFR_TAKE1_RET1(mpfr_cmm_neg,  mpfr_neg)
-MPFR_TAKE1_RET1(mpfr_cmm_sqr, mpfr_sqr)
-MPFR_TAKE1_RET1(mpfr_cmm_sqrt, mpfr_sqrt)
+
 
 
 #define UNARY(name) MPFR_TAKE1_RET1(mpfr_cmm_##name, mpfr_##name) 
@@ -502,4 +495,6 @@ MPFR_TAKE1_RET1(mpfr_cmm_sqrt, mpfr_sqrt)
 #define TERNARY(name) MPFR_TAKE3_RET1(mpfr_cmm_##name, mpfr_##name)
 
 #include "../../src/Data/Approximate/MPFR/special.h"
+#include "../../src/Data/Approximate/MPFR/arithmetics.h"
+
 

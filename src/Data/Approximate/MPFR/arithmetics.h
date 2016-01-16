@@ -1,0 +1,13 @@
+BINARY(add)
+BINARY(sub)
+BINARY(mul)
+BINARY(div)
+
+UNARY(neg)
+UNARY(sqr)
+UNARY(sqrt)
+BINARY(pow)
+UNARY(rec_sqrt)
+UNARY(cbrt)
+UNARY(abs)
+BINARY(dim)
