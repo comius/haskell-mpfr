@@ -374,8 +374,14 @@ sgn :: Rounded -> Maybe Int
 
 {- 5.10 Integer and Remainder related functions -}
 
+#include "MPFR/integer.h"
+
+rintCeil = rint_ceil
+rintFloor = rint_floor
+rintRound = rint_round
+rintTrunc = rint_trunc
+
 {-
-rint :: RoundMode -> Precision -> Rounded -> Rounded
 ceil :: Precision -> Rounded -> Rounded
 ceil_ :: Precision -> Rounded -> (Rounded, Int)
 floor :: Precision -> Rounded -> Rounded
@@ -384,34 +390,9 @@ round :: Precision -> Rounded -> Rounded
 round_ :: Precision -> Rounded -> (Rounded, Int)
 trunc :: Precision -> Rounded -> Rounded
 trunc_ :: Precision -> Rounded -> (Rounded, Int)
-
--}
-
-{-
-rint_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-rintCeil :: RoundMode -> Precision -> Rounded -> Rounded
-rintCeil_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-rintFloor :: RoundMode -> Precision -> Rounded -> Rounded
-rintFloor_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-rintRound :: RoundMode -> Precision -> Rounded -> Rounded
-rintRound_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-rintTrunc :: RoundMode -> Precision -> Rounded -> Rounded
-rintTrunc_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-
-fmod :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-fmod_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-
-modf :: RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded)
-modf_ ::
-  RoundMode -> Precision -> Precision -> Rounded -> (Rounded, Rounded, Int)
-frac :: RoundMode -> Precision -> Rounded -> Rounded
-frac_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
-remainder :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-remainder_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 remquo :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 remquo_ ::
   RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int, Int)
-
 -}
 
 {- 5.11 Rounding related functions -}

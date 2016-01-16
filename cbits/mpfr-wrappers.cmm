@@ -485,5 +485,6 @@ MPFR_TAKE1_RET1(mpfr_cmm_set,  mpfr_set)
 #include "../../src/Data/Approximate/MPFR/special.h"
 #include "../../src/Data/Approximate/MPFR/arithmetics.h"
 #include "../../src/Data/Approximate/MPFR/comparison.h"
+#include "../../src/Data/Approximate/MPFR/integer.h"
 
 
