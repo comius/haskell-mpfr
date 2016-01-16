@@ -1,0 +1,29 @@
+
+#define STR(s) #s
+#define LONGNAME(name) STR(mpfr_cmm_##name)
+
+#define UNARY(name) \
+foreign import prim LONGNAME(name) mpfr##name :: Unary \
+name :: RoundMode -> Precision -> Rounded -> Rounded \
+name = unary mpfr##name 
+
+#define BINARY(name) \
+foreign import prim LONGNAME(name) mpfr##name :: Binary \
+name :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded \
+name = binary mpfr##name 
+
+#define CONST(name) \
+foreign import prim LONGNAME(name) mpfr##name :: Const \
+name :: RoundMode -> Precision -> Rounded \
+name = constf mpfr##name 
+
+#define UNARY2(name) \
+foreign import prim LONGNAME(name) mpfr##name :: Unary2 \
+name :: RoundMode -> Precision -> Rounded -> (Rounded, Rounded) \
+name = unary2 mpfr##name 
+
+
+#define TERNARY(name) \
+foreign import prim LONGNAME(name) mpfr##name :: Ternary \
+name :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> Rounded \
+name = ternary mpfr##name 
