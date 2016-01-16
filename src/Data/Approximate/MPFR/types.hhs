@@ -27,3 +27,8 @@ name = unary2 mpfr##name
 foreign import prim LONGNAME(name) mpfr##name :: Ternary \
 name :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> Rounded \
 name = ternary mpfr##name 
+
+#define COMPARISON(name) \
+foreign import prim LONGNAME(name##_p) mpfr##name##_p :: Comparison \
+name :: Rounded -> Rounded -> Bool \
+name = cmp mpfr##name##_p 

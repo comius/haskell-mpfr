@@ -21,7 +21,7 @@ module Data.Approximate.MPFRLowLevel (
   getExp,
   toRationalA, toDoubleA
 ) where
-import Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan, pi, abs)
+import Prelude as Pr hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan, pi, abs, min)
 import Data.Bits
 import Data.List (isInfixOf)
 import Data.Ratio
@@ -165,7 +165,7 @@ toStringExp dec d | isInfixOf "NaN" ss = "NaN"
                   | isInfixOf "Inf" ss = s ++ "Infinity"
                   | isZero d = "0"
                   | e > 0              =
-                      s ++ if Prelude.floor prec <= dec
+                      s ++ if Pr.floor prec <= dec
                            then
                                take e ss ++
                                let bt = backtrim (drop e ss)
@@ -184,7 +184,7 @@ toStringExp dec d | isInfixOf "NaN" ss = "NaN"
                                ++ "e" ++ show (pred e))
                     where (str, e') = mpfrToString Near n 10 d
                           e = fromIntegral e'
-                          n        = max dec 5
+                          n        = Pr.max dec 5
                           (s, ss) = case head str of
                                       '-' -> ("-", tail str)
                                       _   -> ("" , str)
@@ -211,7 +211,7 @@ toString dec d | isInfixOf "NaN" ss = "NaN"
                           EQ -> "0." ++ let bt = all (== '0') ss
                                         in if bt then "0" else ss
                   where (str, e') = mpfrToString Near n 10 d
-                        n        = max dec 5
+                        n        = Pr.max dec 5
                         e = fromIntegral e'
                         (s, ss) = case head str of
                                     '-' -> ("-", tail str)
@@ -321,26 +321,24 @@ foreign import prim "mpfr_cmm_cmp" mpfrCmp# :: CSignPrec# -> CExp# -> ByteArray#
 
 foreign import prim "mpfr_cmm_sgn" mpfrSgn# :: CSignPrec# -> CExp# -> ByteArray# -> Int#
 
-foreign import prim "mpfr_cmm_min" mpfrMin# :: Binary
-foreign import prim "mpfr_cmm_max" mpfrMax# :: Binary
+#include "MPFR/comparison.h"
 
-foreign import prim "mpfr_cmm_equal_p"         mpfrEqual#        :: Comparison
-foreign import prim "mpfr_cmm_lessgreater_p"   mpfrNotEqual#     :: Comparison
-foreign import prim "mpfr_cmm_less_p"          mpfrLess#         :: Comparison
-foreign import prim "mpfr_cmm_greater_p"       mpfrGreater#      :: Comparison
-foreign import prim "mpfr_cmm_lessequal_p"     mpfrLessEqual#    :: Comparison
-foreign import prim "mpfr_cmm_greaterequal_p"  mpfrGreaterEqual# :: Comparison
+greatereq = greaterequal
+lesseq = lessequal
+notequal = lessgreater
+minD = min
+maxD = Data.Approximate.MPFRLowLevel.max
 
 instance Eq Rounded where
-  (==) = cmp mpfrEqual#
-  (/=) = cmp mpfrNotEqual#
+  (==) = equal
+  (/=) = notequal
 
 instance Ord Rounded where
   compare (Rounded s e l) (Rounded s' e' l') = compare (fromIntegral (I# (mpfrCmp# s e l s' e' l'))) (0 :: Int32) -- TODO opt
-  (<=) = cmp mpfrLessEqual#
-  (>=) = cmp mpfrGreaterEqual#
-  (<) = cmp mpfrLess#
-  (>) = cmp mpfrGreater#
+  (<=) = lesseq
+  (>=) = greatereq
+  (<) = less
+  (>) = greater
   {- TODO
   min = binary mpfrMin#
   max = binary mpfrMax#
@@ -365,24 +363,11 @@ cmp2w :: Rounded -> GHC.Types.Word -> Exp -> Maybe Ordering
 
 cmpabs :: Rounded -> Rounded -> Maybe Ordering
 
-greater :: Rounded -> Rounded -> Bool
-greatereq :: Rounded -> Rounded -> Bool
-
-less :: Rounded -> Rounded -> Bool
-lesseq :: Rounded -> Rounded -> Bool
-equal :: Rounded -> Rounded -> Bool
-
-lessgreater :: Rounded -> Rounded -> Maybe Bool
 unordered :: Rounded -> Rounded -> Maybe Bool
 
 isInteger :: Rounded -> Bool
 isNumber :: Rounded -> Bool
 sgn :: Rounded -> Maybe Int
-
-maxD :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-maxD_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-minD :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded
-minD_ :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 
 --}
 
@@ -469,6 +454,5 @@ decompose :: Rounded -> (Integer, Exp)
 getMantissa :: Rounded -> Integer
 
 one :: Rounded
-
 
 -}
