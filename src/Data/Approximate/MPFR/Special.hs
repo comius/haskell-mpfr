@@ -37,7 +37,10 @@ name :: RoundMode -> Precision -> Rounded -> (Rounded, Rounded) \
 name = unary2 mpfr##name 
 
 
-#define TRINARY(name)
+#define TERNARY(name) \
+foreign import prim LONGNAME(name) mpfr##name :: Ternary \
+name :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> Rounded \
+name = ternary mpfr##name 
 
 
 #include "special.h"

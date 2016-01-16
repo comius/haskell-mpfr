@@ -499,7 +499,7 @@ MPFR_TAKE1_RET1(mpfr_cmm_sqrt, mpfr_sqrt)
 #define BINARY(name) MPFR_TAKE2_RET1(mpfr_cmm_##name, mpfr_##name)
 #define CONST(name) MPFR_CONSTANT(mpfr_cmm_##name, mpfr_##name)
 #define UNARY2(name) MPFR_TAKE1_RET2(mpfr_cmm_##name, mpfr_##name)
-#define TRINARY(name) MPFR_TAKE3_RET1(mpfr_cmm_##name, mpfr_##name)
+#define TERNARY(name) MPFR_TAKE3_RET1(mpfr_cmm_##name, mpfr_##name)
 
 #include "../../src/Data/Approximate/MPFR/special.h"
 

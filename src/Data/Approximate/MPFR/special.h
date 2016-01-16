@@ -47,8 +47,8 @@ UNARY2(sin_cos)
 BINARY(atan2)
 UNARY2(sinh_cosh)
 
-TRINARY(fma)
-TRINARY(fms)
+TERNARY(fma)
+TERNARY(fms)
 BINARY(agm)
 BINARY(hypot)
 

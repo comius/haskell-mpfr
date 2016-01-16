@@ -7,7 +7,7 @@
         -- |
 
 module Data.Approximate.MPFR.Types (
-   constf, unary, unary2, unary_,binary,binary_, cmp, Rounded (..), RoundMode (..), Precision, Const, Unary, Unary2, Binary, Comparison, CExp#, CPrec#, CSignPrec#, mode#, prec#, RoundedOut#, CRounding#, Exp, CPrecision#, getPrec
+   constf, unary, unary2, unary_,binary,binary_,ternary, cmp, Rounded (..), RoundMode (..), Precision, Const, Unary, Unary2, Binary,Ternary, Comparison, CExp#, CPrec#, CSignPrec#, mode#, prec#, RoundedOut#, CRounding#, Exp, CPrecision#, getPrec
 ) where
 import Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan)
 import Data.Bits
@@ -144,6 +144,12 @@ type Binary
     CSignPrec# -> CExp# -> ByteArray# ->
     CSignPrec# -> CExp# -> ByteArray# -> RoundedOut#
 
+type Ternary
+  = CRounding# -> CPrec# ->
+    CSignPrec# -> CExp# -> ByteArray# ->
+    CSignPrec# -> CExp# -> ByteArray# ->
+    CSignPrec# -> CExp# -> ByteArray# -> RoundedOut#
+
 type Binary_
   = CRounding# -> CPrec# ->
     CSignPrec# -> CExp# -> ByteArray# ->
@@ -186,6 +192,11 @@ binary_ :: Binary_ -> RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, 
 binary_ f r p (Rounded s e l) (Rounded s' e' l') = (Rounded s'' e'' l'', I# t) where
     (# s'', e'', l'', t #) = f (mode# r) (prec# p) s e l s' e' l'
 {-# INLINE binary_ #-}
+
+ternary :: Ternary -> RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> Rounded
+ternary f r p (Rounded s e l) (Rounded s' e' l') (Rounded s'' e'' l'') = Rounded s''' e''' l''' where
+    (# s''', e''', l''' #) = f (mode# r) (prec# p) s e l s' e' l' s'' e'' l''
+{-# INLINE ternary #-}
 
 
 cmp :: Comparison -> Rounded -> Rounded -> Bool
