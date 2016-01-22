@@ -19,7 +19,7 @@ module Data.Approximate.MPFRLowLevel (
   pi,
   isNaN, isInfinite, isZero,
   getExp,
-  toRationalA, toDoubleA
+  toRationalA, toDoubleA, facw, zetaw, jn, yn
 ) where
 import Prelude as Pr hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan, pi, abs, min)
 import Data.Bits
@@ -381,23 +381,35 @@ euler=const_euler
 log2c=const_log2
 catalan=const_catalan
 
+foreign import prim "mpfr_cmm_fac" mpfrFac#
+  :: CRounding# -> CPrecision# -> Word# -> RoundedOut#
 
-{-
+foreign import prim "mpfr_cmm_zetaw" mpfrZeta#
+  :: CRounding# -> CPrecision# -> Word# -> RoundedOut#
+
+foreign import prim "mpfr_cmm_jn" mpfrJn#
+  :: CRounding# -> CPrecision# -> Int# -> CSignPrec# -> CExp# -> ByteArray# -> RoundedOut#
+
+foreign import prim "mpfr_cmm_yn" mpfrYn#
+  :: CRounding# -> CPrecision# -> Int# -> CSignPrec# -> CExp# -> ByteArray# -> RoundedOut#
+
+
 facw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
-facw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
+facw r p (W# x) = Rounded s' e' l' where
+    (# s', e', l' #) = mpfrFac# (mode# r) (prec# p) x 
 
 zetaw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
-zetaw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
+zetaw r p (W# x) = Rounded s' e' l' where
+    (# s', e', l' #) = mpfrZeta# (mode# r) (prec# p) x 
 
 jn :: RoundMode -> Precision -> Int -> Rounded -> Rounded
-jn_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
+jn r p (I# x) (Rounded s e l) = Rounded s' e' l' where
+    (# s', e', l' #) = mpfrJn# (mode# r) (prec# p) x s e l 
+
 
 yn :: RoundMode -> Precision -> Int -> Rounded -> Rounded
-yn_ :: RoundMode -> Precision -> Int -> Rounded -> (Rounded, Int)
-
--}
-
-
+yn r p (I# x) (Rounded s e l) = Rounded s' e' l' where
+    (# s', e', l' #) = mpfrYn# (mode# r) (prec# p) x s e l 
 
 {- 5.10 Integer and Remainder related functions -}
 

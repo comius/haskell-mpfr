@@ -488,3 +488,81 @@ MPFR_TAKE1_RET1(mpfr_cmm_set,  mpfr_set)
 #include "../../src/Data/Approximate/MPFR/integer.h"
 
 
+
+mpfr_cmm_fac(W_ rnd, W_ prec, W_ x)
+{
+  W_ ret;
+  W_ ternary;
+  
+again:
+  STK_CHK_GEN_N(1 * SIZEOF_MPFR);                                 \
+  MAYBE_GC(again); 
+
+  ret = Sp - 1 * SIZEOF_MPFR;
+  
+  ccall mpfr_init2(ret "ptr", prec);
+  
+  (ternary) = ccall mpfr_fac_ui(ret "ptr", x, rnd);
+
+  MPFR_RETURN1(ret);  
+}
+
+mpfr_cmm_zetaw(W_ rnd, W_ prec, W_ x)
+{
+  W_ ret;
+  W_ ternary;
+  
+again:
+  STK_CHK_GEN_N(1 * SIZEOF_MPFR);                                 \
+  MAYBE_GC(again); 
+
+  ret = Sp - 1 * SIZEOF_MPFR;
+  
+  ccall mpfr_init2(ret "ptr", prec);
+  
+  (ternary) = ccall mpfr_zeta_ui(ret "ptr", x, rnd);
+
+  MPFR_RETURN1(ret);  
+}
+
+mpfr_cmm_jn(W_ rnd, W_ prec, W_ x, W_ ps, W_ exp, P_ limbs)
+{
+  W_ op, ret;
+  W_ ternary;
+  
+again:
+  STK_CHK_GEN_N(1 * SIZEOF_MPFR);                                 \
+  MAYBE_GC(again); 
+
+  op = Sp - 1 * SIZEOF_MPFR;
+  ret = Sp - 2 * SIZEOF_MPFR;
+  
+  MPFR_REBUILD(ps, exp, limbs, op);     
+  
+  ccall mpfr_init2(ret "ptr", prec);
+  
+  (ternary) = ccall mpfr_jn(ret "ptr", x, op, rnd);
+
+  MPFR_RETURN1(ret);  
+}
+
+mpfr_cmm_yn(W_ rnd, W_ prec, W_ x, W_ ps, W_ exp, P_ limbs)
+{
+  W_ op, ret;
+  W_ ternary;
+  
+again:
+  STK_CHK_GEN_N(1 * SIZEOF_MPFR);                                 \
+  MAYBE_GC(again); 
+
+  op = Sp - 1 * SIZEOF_MPFR;
+  ret = Sp - 2 * SIZEOF_MPFR;
+  
+  MPFR_REBUILD(ps, exp, limbs, op);     
+  
+  ccall mpfr_init2(ret "ptr", prec);
+  
+  (ternary) = ccall mpfr_yn(ret "ptr", x, op, rnd);
+
+  MPFR_RETURN1(ret);  
+}
