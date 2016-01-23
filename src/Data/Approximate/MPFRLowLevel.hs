@@ -421,14 +421,6 @@ rintRound = rint_round
 rintTrunc = rint_trunc
 
 {-
-ceil :: Precision -> Rounded -> Rounded
-ceil_ :: Precision -> Rounded -> (Rounded, Int)
-floor :: Precision -> Rounded -> Rounded
-floor_ :: Precision -> Rounded -> (Rounded, Int)
-round :: Precision -> Rounded -> Rounded
-round_ :: Precision -> Rounded -> (Rounded, Int)
-trunc :: Precision -> Rounded -> Rounded
-trunc_ :: Precision -> Rounded -> (Rounded, Int)
 remquo :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
 remquo_ ::
   RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int, Int)

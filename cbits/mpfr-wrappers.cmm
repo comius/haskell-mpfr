@@ -471,6 +471,25 @@ again:                                                            \
   MPFR_RETURN2(ret1,ret2);                                        \
 }
 
+#define MPFR_ROUNDING(name,mpfr_fun)                              \
+name(W_ prec, W_ ps, W_ exp, P_ limbs)                            \
+{                                                                 \
+  W_ op1, ret;                                                    \
+                                                                  \
+again:                                                            \
+  STK_CHK_GEN_N(2 * SIZEOF_MPFR);                                 \
+  MAYBE_GC(again);                                                \
+                                                                  \
+  op1 = Sp - 1 * SIZEOF_MPFR;                                     \
+  ret = Sp - 2 * SIZEOF_MPFR;                                     \
+                                                                  \
+  MPFR_REBUILD(ps, exp, limbs, op1);                              \
+                                                                  \
+  ccall mpfr_init2(ret "ptr", prec);                              \
+  ccall mpfr_fun(ret "ptr", op1 "ptr");                           \
+                                                                  \
+  MPFR_RETURN1(ret);                                              \
+}
 
 MPFR_TAKE1_RET1(mpfr_cmm_set,  mpfr_set)
 
@@ -481,7 +500,9 @@ MPFR_TAKE1_RET1(mpfr_cmm_set,  mpfr_set)
 #define CONST(name) MPFR_CONSTANT(mpfr_cmm_##name, mpfr_##name)
 #define UNARY2(name) MPFR_TAKE1_RET2(mpfr_cmm_##name, mpfr_##name)
 #define TERNARY(name) MPFR_TAKE3_RET1(mpfr_cmm_##name, mpfr_##name)
-#define COMPARISON(name) MPFR_COMPARISON(mpfr_cmm_##name##_p, mpfr_##name##_p) 
+#define COMPARISON(name) MPFR_COMPARISON(mpfr_cmm_##name##_p, mpfr_##name##_p)
+#define ROUNDING(name) MPFR_ROUNDING(mpfr_cmm_##name, mpfr_##name)
+ 
 #include "../../src/Data/Approximate/MPFR/special.h"
 #include "../../src/Data/Approximate/MPFR/arithmetics.h"
 #include "../../src/Data/Approximate/MPFR/comparison.h"

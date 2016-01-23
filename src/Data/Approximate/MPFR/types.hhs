@@ -32,3 +32,8 @@ name = ternary mpfr##name
 foreign import prim LONGNAME(name##_p) mpfr##name##_p :: Comparison \
 name :: Rounded -> Rounded -> Bool \
 name = cmp mpfr##name##_p 
+
+#define ROUNDING(name) \
+foreign import prim LONGNAME(name) mpfr##name :: Rounding \
+name :: Precision -> Rounded -> Rounded \
+name = rounding mpfr##name 
