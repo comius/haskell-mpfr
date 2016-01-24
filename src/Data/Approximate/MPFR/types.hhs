@@ -36,4 +36,10 @@ name = cmp mpfr##name##_p
 #define ROUNDING(name) \
 foreign import prim LONGNAME(name) mpfr##name :: Rounding \
 name :: Precision -> Rounded -> Rounded \
-name = rounding mpfr##name 
+name = rounding mpfr##name
+
+#define TEST(hname, cname) \
+foreign import prim LONGNAME(cname) mpfr##hname :: Test \
+hname :: RoundMode -> Rounded -> Bool \
+hname = test mpfr##hname
+

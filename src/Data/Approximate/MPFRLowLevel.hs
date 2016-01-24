@@ -224,13 +224,15 @@ fitsUInt :: RoundMode -> Rounded -> Bool
 fitsULong :: RoundMode -> Rounded -> Bool
 fitsUShort :: RoundMode -> Rounded -> Bool
 -}
+#include "MPFR/types.hhs"
+#include "MPFR/conversion.h"
+
 instance Show Rounded where
     show = toStringExp 16
 
 {- 5.5 Basic Arithmetic Functions -}
 
 
-#include "MPFR/types.hhs"
 #include "MPFR/arithmetics.h"
 
 recSqrt = rec_sqrt
