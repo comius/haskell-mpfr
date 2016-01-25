@@ -1,0 +1,8 @@
+#define UNARY(name) name,
+#define BINARY(name) name,
+#define CONST(name) name,
+#define UNARY2(name) name,
+#define TERNARY(name) name,
+#define COMPARISON(name) name,
+#define ROUNDING(name) name,
+#define TEST(hname, cname) hname,
