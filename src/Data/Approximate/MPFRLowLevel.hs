@@ -8,20 +8,38 @@
 {-# LANGUAGE UnliftedFFITypes #-}  -- argument type of foreign import
 {-# LANGUAGE BangPatterns #-}  -- !
 
-module Data.Approximate.MPFRLowLevel (
+module Data.Approximate.MPFRLowLevel ( 
   RoundMode(..), Precision, Rounded,
   getPrec,
   set,
-  posInf, negInf, zero, naN,
-  fromInt, fromIntegerA, fromDouble, fromRationalA,
-  add, sub, mul, mul2i, sqr, div, pow, neg, sqrt,
-  exp, log, sin, cos, tan, asin, acos, atan,
-  pi,
+  posInf, negInf, zero, naN,  
+  mul2i, 
   isNaN, isInfinite, isZero,
   getExp,
-  toRationalA, toDoubleA, facw, zetaw, jn, yn
+  
+#  include "MPFR/export.hhs"
+
+-- * Conversion functions
+  fromInt, fromIntegerA, fromDouble, fromRationalA,
+  toRationalA, toDoubleA,
+#  include "MPFR/conversion.h"
+
+-- * Arithmetic functions
+#  include "MPFR/arithmetics.h"
+
+-- * Comparison functions
+#  include "MPFR/comparison.h"
+
+-- * Integer functions
+#  include "MPFR/integer.h"
+
+-- * Special functions
+#  include "MPFR/special.h"
+   facw, zetaw, jn, yn,
 ) where
-import Prelude as Pr hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan, pi, abs, min)
+import Prelude as Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan, pi, abs, min, max, floor, round, sinh, cosh,tanh, acosh, asinh, atanh, atan2)
+--import Prelude(Show(..), Eq(..), (.), reverse, dropWhile, head, tail, fromIntegral, (++), pred, (+), (-), (*), take, all, drop, null, String, otherwise, ($), logBase, negate)
+import qualified Prelude(floor, max)
 import Data.Bits
 import Data.List (isInfixOf)
 import Data.Ratio
@@ -164,7 +182,7 @@ toStringExp dec d | isInfixOf "NaN" ss = "NaN"
                   | isInfixOf "Inf" ss = s ++ "Infinity"
                   | isZero d = "0"
                   | e > 0              =
-                      s ++ if Pr.floor prec <= dec
+                      s ++ if Prelude.floor prec <= dec
                            then
                                take e ss ++
                                let bt = backtrim (drop e ss)
@@ -183,7 +201,7 @@ toStringExp dec d | isInfixOf "NaN" ss = "NaN"
                                ++ "e" ++ show (pred e))
                     where (str, e') = mpfrToString Near n 10 d
                           e = fromIntegral e'
-                          n        = Pr.max dec 5
+                          n        = Prelude.max dec 5
                           (s, ss) = case head str of
                                       '-' -> ("-", tail str)
                                       _   -> ("" , str)
@@ -210,20 +228,13 @@ toString dec d | isInfixOf "NaN" ss = "NaN"
                           EQ -> "0." ++ let bt = all (== '0') ss
                                         in if bt then "0" else ss
                   where (str, e') = mpfrToString Near n 10 d
-                        n        = Pr.max dec 5
+                        n        = Prelude.max dec 5
                         e = fromIntegral e'
                         (s, ss) = case head str of
                                     '-' -> ("-", tail str)
                                     _   -> ("" , str)
                         backtrim = reverse . dropWhile (== '0') . reverse
-{-
-fitsSInt :: RoundMode -> Rounded -> Bool
-fitsSLong :: RoundMode -> Rounded -> Bool
-fitsSShort :: RoundMode -> Rounded -> Bool
-fitsUInt :: RoundMode -> Rounded -> Bool
-fitsULong :: RoundMode -> Rounded -> Bool
-fitsUShort :: RoundMode -> Rounded -> Bool
--}
+
 #include "MPFR/types.hhs"
 #include "MPFR/conversion.h"
 
@@ -236,7 +247,7 @@ instance Show Rounded where
 #include "MPFR/arithmetics.h"
 
 recSqrt = rec_sqrt
-absD = abs
+absD = Data.Approximate.MPFRLowLevel.abs
 
 mul2i :: RoundMode -> Precision -> Rounded -> Int -> Rounded
 mul2i r p (Rounded s e l) (I# i) = Rounded s (e +# i) l
@@ -327,7 +338,7 @@ foreign import prim "mpfr_cmm_sgn" mpfrSgn# :: CSignPrec# -> CExp# -> ByteArray#
 greatereq = greaterequal
 lesseq = lessequal
 notequal = lessgreater
-minD = min
+minD = Data.Approximate.MPFRLowLevel.min
 maxD = Data.Approximate.MPFRLowLevel.max
 
 instance Eq Rounded where
