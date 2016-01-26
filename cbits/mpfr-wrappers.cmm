@@ -507,11 +507,11 @@ again:                                                            \
 MPFR_TAKE1_RET1(mpfr_cmm_set,  mpfr_set)
 
 
-
+#define UNARY_(hname,cname) MPFR_TAKE1_RET1(mpfr_cmm_##cname, mpfr_##cname)
 #define UNARY(name) MPFR_TAKE1_RET1(mpfr_cmm_##name, mpfr_##name) 
 #define BINARY(name) MPFR_TAKE2_RET1(mpfr_cmm_##name, mpfr_##name)
-#define CONST(name) MPFR_CONSTANT(mpfr_cmm_##name, mpfr_##name)
-#define UNARY2(name) MPFR_TAKE1_RET2(mpfr_cmm_##name, mpfr_##name)
+#define CONST(hname, cname) MPFR_CONSTANT(mpfr_cmm_##cname, mpfr_##cname)
+#define UNARY2(hname,cname) MPFR_TAKE1_RET2(mpfr_cmm_##cname, mpfr_##cname)
 #define TERNARY(name) MPFR_TAKE3_RET1(mpfr_cmm_##name, mpfr_##name)
 #define COMPARISON(name) MPFR_COMPARISON(mpfr_cmm_##name##_p, mpfr_##name##_p)
 #define ROUNDING(name) MPFR_ROUNDING(mpfr_cmm_##name, mpfr_##name)

@@ -2,25 +2,27 @@
 #define STR(s) #s
 #define LONGNAME(name) STR(mpfr_cmm_##name)
 
-#define UNARY(name) \
-foreign import prim LONGNAME(name) mpfr##name :: Unary \
-name :: RoundMode -> Precision -> Rounded -> Rounded \
-name = unary mpfr##name 
+#define UNARY_(hname,cname) \
+foreign import prim LONGNAME(cname) mpfr##hname :: Unary \
+hname :: RoundMode -> Precision -> Rounded -> Rounded \
+hname = unary mpfr##hname 
+
+#define UNARY(name) UNARY_(name,name)
 
 #define BINARY(name) \
 foreign import prim LONGNAME(name) mpfr##name :: Binary \
 name :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded \
 name = binary mpfr##name 
 
-#define CONST(name) \
-foreign import prim LONGNAME(name) mpfr##name :: Const \
-name :: RoundMode -> Precision -> Rounded \
-name = constf mpfr##name 
+#define CONST(hname,cname) \
+foreign import prim LONGNAME(cname) mpfr##hname :: Const \
+hname :: RoundMode -> Precision -> Rounded \
+hname = constf mpfr##hname 
 
-#define UNARY2(name) \
-foreign import prim LONGNAME(name) mpfr##name :: Unary2 \
-name :: RoundMode -> Precision -> Rounded -> (Rounded, Rounded) \
-name = unary2 mpfr##name 
+#define UNARY2(hname,cname) \
+foreign import prim LONGNAME(cname) mpfr##hname :: Unary2 \
+hname :: RoundMode -> Precision -> Rounded -> (Rounded, Rounded) \
+hname = unary2 mpfr##hname 
 
 
 #define TERNARY(name) \

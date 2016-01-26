@@ -9,36 +9,39 @@
 {-# LANGUAGE BangPatterns #-}  -- !
 
 module Data.Approximate.MPFRLowLevel ( 
+-- * Types
   RoundMode(..), Precision, Rounded,
-  getPrec,
+
+#  include "MPFR/export.hhs"
+-- * Assignment functions
   set,
   posInf, negInf, zero, naN,  
-  mul2i, 
-  isNaN, isInfinite, isZero,
-  getExp,
-  
-#  include "MPFR/export.hhs"
-
--- * Conversion functions
   fromInt, fromIntegerA, fromDouble, fromRationalA,
+
+-- * Conversion functions  
   toRationalA, toDoubleA,
 #  include "MPFR/conversion.h"
 
 -- * Arithmetic functions
 #  include "MPFR/arithmetics.h"
+  mul2i, 
 
 -- * Comparison functions
-#  include "MPFR/comparison.h"
-
--- * Integer functions
-#  include "MPFR/integer.h"
+  isNaN, isInfinite, isZero,
+# include "MPFR/comparison.h"
 
 -- * Special functions
-#  include "MPFR/special.h"
-   facw, zetaw, jn, yn,
+# include "MPFR/special.h"
+  facw, zetaw, jn, yn,
+
+-- * Integer functions
+# include "MPFR/integer.h"
+   
+-- * Miscellaneous functions
+  getPrec,
+  getExp,
 ) where
 import Prelude as Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan, pi, abs, min, max, floor, round, sinh, cosh,tanh, acosh, asinh, atanh, atan2)
---import Prelude(Show(..), Eq(..), (.), reverse, dropWhile, head, tail, fromIntegral, (++), pred, (+), (-), (*), take, all, drop, null, String, otherwise, ($), logBase, negate)
 import qualified Prelude(floor, max)
 import Data.Bits
 import Data.List (isInfixOf)
@@ -246,7 +249,6 @@ instance Show Rounded where
 
 #include "MPFR/arithmetics.h"
 
-recSqrt = rec_sqrt
 absD = Data.Approximate.MPFRLowLevel.abs
 
 mul2i :: RoundMode -> Precision -> Rounded -> Int -> Rounded
@@ -387,13 +389,6 @@ sgn :: Rounded -> Maybe Int
 
 #include "MPFR/special.h"
 
-sincos = sin_cos
-sincosh = sinh_cosh
-pi=const_pi
-euler=const_euler
-log2c=const_log2
-catalan=const_catalan
-
 foreign import prim "mpfr_cmm_fac" mpfrFac#
   :: CRounding# -> CPrecision# -> Word# -> RoundedOut#
 
@@ -427,11 +422,6 @@ yn r p (I# x) (Rounded s e l) = Rounded s' e' l' where
 {- 5.10 Integer and Remainder related functions -}
 
 #include "MPFR/integer.h"
-
-rintCeil = rint_ceil
-rintFloor = rint_floor
-rintRound = rint_round
-rintTrunc = rint_trunc
 
 {-
 remquo :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
