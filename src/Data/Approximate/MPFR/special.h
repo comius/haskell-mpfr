@@ -48,7 +48,7 @@ UNARY(gamma)
 
 UNARY(lngamma)
 
-UNARY(lgamma)
+UNARY(digamma)
 
 UNARY(zeta)
 
