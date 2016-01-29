@@ -15,3 +15,5 @@ UNARY2(modf,modf)
 
 BINARY(fmod)
 BINARY(remainder)
+
+TEST(isInteger, integer_p)

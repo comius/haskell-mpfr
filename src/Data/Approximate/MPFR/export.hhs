@@ -7,3 +7,4 @@
 #define COMPARISON(name) name,
 #define ROUNDING(name) name,
 #define TEST(hname, cname) hname,
+#define RTEST(hname, cname) hname,

@@ -7,8 +7,8 @@
         -- |
 
 module Data.Approximate.MPFR.Types (
-   constf, unary, unary2, unary_,binary,binary_,ternary, cmp,rounding, test, Rounded (..), RoundMode (..), 
-      Precision, Const, Unary, Unary2, Binary,Ternary, Comparison, Rounding, Test,
+   constf, unary, unary2, unary_,binary,binary_,ternary, cmp,rounding, test, rtest, Rounded (..), RoundMode (..), 
+      Precision, Const, Unary, Unary2, Binary,Ternary, Comparison, Rounding, Test, RTest,
       CExp#, CPrec#, CSignPrec#, mode#, prec#, RoundedOut#, CRounding#, Exp, CPrecision#, getPrec
 ) where
 import Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan)
@@ -166,8 +166,11 @@ type Comparison
 type Rounding
   = CPrec# -> CSignPrec# -> CExp# -> ByteArray# -> RoundedOut#
 
-type Test
+type RTest
   = CRounding# -> CSignPrec# -> CExp# -> ByteArray# -> Int#
+
+type Test
+  = CSignPrec# -> CExp# -> ByteArray# -> Int#
 
 
 constf :: Const -> RoundMode -> Precision -> Rounded
@@ -217,7 +220,10 @@ rounding f p (Rounded s e l) = Rounded s' e' l' where
     (# s', e', l' #) = f (prec# p) s e l
 {-# INLINE rounding #-}
 
-test :: Test -> RoundMode -> Rounded -> Bool
-test f r (Rounded s e l) =  I# (f (mode# r) s e l) /= 0
-{-# INLINE test #-}
+rtest :: RTest -> RoundMode -> Rounded -> Bool
+rtest f r (Rounded s e l) =  I# (f (mode# r) s e l) /= 0
+{-# INLINE rtest #-}
 
+test :: Test -> Rounded -> Bool
+test f (Rounded s e l) =  I# (f s e l) /= 0
+{-# INLINE test #-}

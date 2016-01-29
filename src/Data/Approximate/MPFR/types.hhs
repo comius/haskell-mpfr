@@ -40,8 +40,12 @@ foreign import prim LONGNAME(name) mpfr##name :: Rounding \
 name :: Precision -> Rounded -> Rounded \
 name = rounding mpfr##name
 
+#define RTEST(hname, cname) \
+foreign import prim LONGNAME(cname) mpfr##hname :: RTest \
+hname :: RoundMode -> Rounded -> Bool \
+hname = rtest mpfr##hname
+
 #define TEST(hname, cname) \
 foreign import prim LONGNAME(cname) mpfr##hname :: Test \
-hname :: RoundMode -> Rounded -> Bool \
+hname :: Rounded -> Bool \
 hname = test mpfr##hname
-

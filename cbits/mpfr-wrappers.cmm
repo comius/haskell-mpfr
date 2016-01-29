@@ -576,7 +576,8 @@ MPFR_TAKE1_RET1(mpfr_cmm_set,  mpfr_set)
 #define TERNARY(name) MPFR_TAKE3_RET1(mpfr_cmm_##name, mpfr_##name)
 #define COMPARISON(name) MPFR_COMPARISON(mpfr_cmm_##name##_p, mpfr_##name##_p)
 #define ROUNDING(name) MPFR_ROUNDING(mpfr_cmm_##name, mpfr_##name)
-#define TEST(hname,cname) MPFR_RTEST(mpfr_cmm_##cname, mpfr_##cname)
+#define RTEST(hname,cname) MPFR_RTEST(mpfr_cmm_##cname, mpfr_##cname)
+#define TEST(hname,cname) MPFR_TEST(mpfr_cmm_##cname, mpfr_##cname)
  
 #include "../../src/Data/Approximate/MPFR/special.h"
 #include "../../src/Data/Approximate/MPFR/arithmetics.h"

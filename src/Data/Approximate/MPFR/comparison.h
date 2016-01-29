@@ -1,4 +1,5 @@
-
+TEST(isNumber, number_p)
+TEST(isRegular, regular_p)
 BINARY(min)
 BINARY(max)
 COMPARISON(equal)
