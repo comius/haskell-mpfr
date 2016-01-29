@@ -19,7 +19,7 @@ module Data.Approximate.MPFRLowLevel (
   fromInt, fromIntegerA, fromDouble, fromRationalA,
 
 -- * Conversion functions  
-  toRationalA, toDoubleA,
+  toRationalA, toDoubleA, toDouble2Exp,  toInteger2Exp,
   toRawStringExp, toStringHex, toStringBin, toStringSci, toStringFix, toString, toStringReadback,
   
 #  include "MPFR/conversion.h"
@@ -145,31 +145,38 @@ int2w_ :: RoundMode -> Precision -> GHC.Types.Word -> Int -> (Rounded, Int)
 toDouble :: RoundMode -> Rounded -> Double
 toDouble2exp :: RoundMode -> Rounded -> (Double, Int)
 toInt :: RoundMode -> Rounded -> Int
-toString :: GHC.Types.Word -> Rounded -> String
-toStringExp :: GHC.Types.Word -> Rounded -> String
 toWord :: RoundMode -> Rounded -> GHC.Types.Word
 -}
 
 foreign import prim "mpfr_cmm_get_z_2exp" mpfrDecode#
   :: CSignPrec# -> CExp# -> ByteArray# -> (# CExp#, Int#, ByteArray# #)
 
-decodeFloat' :: Rounded -> (Integer, Int)
-decodeFloat' (Rounded sp e l) = case mpfrDecode# sp e l of (# i, s, d #) -> (J# s d, I# i)
+toInteger2Exp :: Rounded -> (Integer, Int)
+toInteger2Exp (Rounded sp e l) = case mpfrDecode# sp e l of (# i, s, d #) -> (J# s d, I# i)
 
 toRationalA :: Rounded -> Rational
 toRationalA r
    | e > 0     = fromIntegral (s `shiftL` e)
    | otherwise = s % (1 `shiftL` negate e)
-   where (s, e) = decodeFloat' r
+   where (s, e) = toInteger2Exp r
 
 foreign import prim "mpfr_cmm_get_d" mpfrGetDouble#
    :: CRounding# ->
       CSignPrec# -> CExp# -> ByteArray# ->
       Double#
 
+foreign import prim "mpfr_cmm_get_d_2exp" mpfrGetDouble2Exp#
+   :: CRounding# ->
+      CSignPrec# -> CExp# -> ByteArray# ->
+      (# Double#, Int# #)
+
 toDoubleA :: RoundMode -> Rounded -> Double
 toDoubleA r (Rounded sp e l) =
     let d = mpfrGetDouble# (mode# r) sp e l in D# d
+
+toDouble2Exp :: RoundMode -> Rounded -> (Double, Int)
+toDouble2Exp r (Rounded sp e l) =
+    let (# d, exp #) = mpfrGetDouble2Exp# (mode# r) sp e l in (D# d, I# exp) 
 
 foreign import prim "mpfr_cmm_asprintf" mpfrASPrintf#
   :: Addr# -> Int# -> CRounding# ->

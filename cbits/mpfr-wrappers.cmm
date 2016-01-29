@@ -200,6 +200,25 @@ again:
   return (ret);
 }
 
+mpfr_cmm_get_d_2exp(W_ rnd, W_ ps, W_ exp, P_ limbs)
+{
+  D_ ret;
+  W_ mpfr;
+  W_ rexp;
+again:
+  STK_CHK_GEN_N(SIZEOF_MPFR + WDS(1));
+  MAYBE_GC(again);
+
+  mpfr = Sp - 1 * SIZEOF_MPFR;
+  rexp = Sp - 1 * SIZEOF_MPFR - WDS(1);
+
+  MPFR_REBUILD(ps, exp, limbs, mpfr);
+
+  (ret) = ccall mpfr_get_d_2exp(rexp "ptr", mpfr "ptr", rnd);
+
+  return (ret, W_[rexp]);
+}
+
 // arguments: R1 = prec * sign, R2 = exp, R3 = limbs
 mpfr_cmm_get_z_2exp(W_ ps, W_ exp, P_ limbs)
 {
