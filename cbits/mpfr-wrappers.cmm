@@ -593,7 +593,7 @@ mpfr_cmm_fac(W_ rnd, W_ prec, W_ x)
   W_ ternary;
   
 again:
-  STK_CHK_GEN_N(1 * SIZEOF_MPFR);                                 \
+  STK_CHK_GEN_N(1 * SIZEOF_MPFR);
   MAYBE_GC(again); 
 
   ret = Sp - 1 * SIZEOF_MPFR;
@@ -611,7 +611,7 @@ mpfr_cmm_zetaw(W_ rnd, W_ prec, W_ x)
   W_ ternary;
   
 again:
-  STK_CHK_GEN_N(1 * SIZEOF_MPFR);                                 \
+  STK_CHK_GEN_N(1 * SIZEOF_MPFR);
   MAYBE_GC(again); 
 
   ret = Sp - 1 * SIZEOF_MPFR;
@@ -623,13 +623,34 @@ again:
   MPFR_RETURN1(ret);  
 }
 
+mpfr_cmm_root(W_ rnd, W_ prec, W_ x, W_ ps, W_ exp, P_ limbs)
+{
+  W_ op, ret;
+  W_ ternary;
+  
+again:
+  STK_CHK_GEN_N(1 * SIZEOF_MPFR);
+  MAYBE_GC(again); 
+
+  op = Sp - 1 * SIZEOF_MPFR;
+  ret = Sp - 2 * SIZEOF_MPFR;
+  
+  MPFR_REBUILD(ps, exp, limbs, op);     
+  
+  ccall mpfr_init2(ret "ptr", prec);
+  
+  (ternary) = ccall mpfr_root(ret "ptr", op, x, rnd);
+
+  MPFR_RETURN1(ret);  
+}
+
 mpfr_cmm_jn(W_ rnd, W_ prec, W_ x, W_ ps, W_ exp, P_ limbs)
 {
   W_ op, ret;
   W_ ternary;
   
 again:
-  STK_CHK_GEN_N(1 * SIZEOF_MPFR);                                 \
+  STK_CHK_GEN_N(1 * SIZEOF_MPFR);
   MAYBE_GC(again); 
 
   op = Sp - 1 * SIZEOF_MPFR;

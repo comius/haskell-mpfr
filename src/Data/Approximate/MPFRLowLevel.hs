@@ -26,7 +26,7 @@ module Data.Approximate.MPFRLowLevel (
 
 -- * Arithmetic functions
 #  include "MPFR/arithmetics.h"
-  mul2i, 
+  mul2i, div2i, root,
 
 -- * Comparison functions
   isNaN, isInfinite, isZero,
@@ -228,6 +228,18 @@ absD = Data.Approximate.MPFRLowLevel.abs
 mul2i :: RoundMode -> Precision -> Rounded -> Int -> Rounded
 mul2i r p (Rounded s e l) (I# i) = Rounded s (e +# i) l
 
+div2i :: RoundMode -> Precision -> Rounded -> Int -> Rounded
+div2i r p (Rounded s e l) (I# i) = Rounded s (e -# i) l
+
+
+
+foreign import prim "mpfr_cmm_root" mpfrRoot#
+  :: CRounding# -> CPrecision# -> Int# -> CSignPrec# -> CExp# -> ByteArray# -> RoundedOut#
+
+root :: RoundMode -> Precision -> Rounded -> Int -> Rounded
+root r p  (Rounded s e l) (I# x) = Rounded s' e' l' where
+    (# s', e', l' #) = mpfrRoot# (mode# r) (prec# p) x s e l
+
 {-
 addd :: RoundMode -> Precision -> Rounded -> Double -> Rounded
 addd_ :: RoundMode -> Precision -> Rounded -> Double -> (Rounded, Int)
@@ -284,9 +296,6 @@ div2w_ :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
 {-
 sqrtw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
 sqrtw_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
-root :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
-root_ ::
-  RoundMode -> Precision -> Rounded -> GHC.Types.Word -> (Rounded, Int)
 powi :: RoundMode -> Precision -> Rounded -> Int -> Rounded
 powi_ :: RoundMode -> Precision -> Rounded -> Int -> (Rounded, Int)
 poww :: RoundMode -> Precision -> Rounded -> GHC.Types.Word -> Rounded
