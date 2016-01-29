@@ -20,6 +20,8 @@ module Data.Approximate.MPFRLowLevel (
 
 -- * Conversion functions  
   toRationalA, toDoubleA,
+  toRawStringExp, toStringHex, toStringBin, toStringSci, toStringFix, toString, toStringReadback,
+  
 #  include "MPFR/conversion.h"
 
 -- * Arithmetic functions
@@ -169,80 +171,44 @@ toDoubleA :: RoundMode -> Rounded -> Double
 toDoubleA r (Rounded sp e l) =
     let d = mpfrGetDouble# (mode# r) sp e l in D# d
 
+foreign import prim "mpfr_cmm_asprintf" mpfrASPrintf#
+  :: Addr# -> Int# -> CRounding# ->
+     CSignPrec# -> CExp# -> ByteArray# -> ByteArray#
+
+foreign import prim "mpfr_cmm_readbackstr" mpfrReadback#
+  :: CSignPrec# -> CExp# -> ByteArray# -> ByteArray#
+
+
+mpfrASPrintf :: Addr# -> Int -> RoundMode -> Rounded -> String
+mpfrASPrintf f (I# p) r (Rounded s e l) = unpackCString# (byteArrayContents# str) where
+   str = mpfrASPrintf# f p (mode# r) s e l
+
+toStringReadback ::  Rounded -> String
+toStringReadback (Rounded s e l) = unpackCString# (byteArrayContents# str) where
+   str = mpfrReadback# s e l
+
+toStringHex  r p d = mpfrASPrintf "%.*R*a"# p r d
+toStringBin r p d = mpfrASPrintf "%.*R*b"# p r d
+toStringSci r p d = mpfrASPrintf "%.*R*e"# p r d
+toStringFix r p d = mpfrASPrintf "%.*R*f"# p r d
+toString r p d = mpfrASPrintf "%.*R*g"# p r d
+
 foreign import prim "mpfr_cmm_get_str" mpfrGetStr#
   :: CRounding# -> Int# -> Int# ->
      CSignPrec# -> CExp# -> ByteArray# ->
      (# Int#, ByteArray# #)
 
-mpfrToString :: RoundMode -> Int -> Int -> Rounded -> (String, Exp)
-mpfrToString r (I# n) (I# d) (Rounded s e l) = (unpackCString# (byteArrayContents# str), I64# i) where
+
+toRawStringExp :: RoundMode -> Int -> Int -> Rounded -> (String, Exp)
+toRawStringExp r (I# n) (I# d) (Rounded s e l) = (unpackCString# (byteArrayContents# str), I64# i) where
    (# i, str #) = mpfrGetStr# (mode# r) n d s e l
 
--- | Output a string in base 10 rounded to Near in exponential form.
-toStringExp       :: Int -- ^ number of digits
-                  -> Rounded -> String
-toStringExp dec d | isInfixOf "NaN" ss = "NaN"
-                  | isInfixOf "Inf" ss = s ++ "Infinity"
-                  | isZero d = "0"
-                  | e > 0              =
-                      s ++ if Prelude.floor prec <= dec
-                           then
-                               take e ss ++
-                               let bt = backtrim (drop e ss)
-                               in if null bt
-                                  then ""
-                                  else '.' : bt
-                           else head ss : '.' :
-                                let bt = (backtrim . tail) ss
-                                in (if null bt then "0" else bt)
-                                   ++ "e" ++ show (pred e)
-                  | otherwise =
-                      s ++ (head ss : '.' :
-                               (let bt = (backtrim . tail) ss in
-                                if null bt then "0"
-                                else bt )
-                               ++ "e" ++ show (pred e))
-                    where (str, e') = mpfrToString Near n 10 d
-                          e = fromIntegral e'
-                          n        = Prelude.max dec 5
-                          (s, ss) = case head str of
-                                      '-' -> ("-", tail str)
-                                      _   -> ("" , str)
-                          backtrim = reverse . dropWhile (== '0') . reverse
-                          prec = logBase 10 2 * fromIntegral (getExp d) :: Double
-
--- | Output a string in base 10 rounded to Near. The difference from @toStringExp@ is that
--- it won't output in exponential form if it is sensible to do so.
-toString       :: Int -> Rounded -> String
-toString dec d | isInfixOf "NaN" ss = "NaN"
-               | isInfixOf "Inf" ss = s ++ "Infinity"
-               | otherwise          =
-                   s ++ case compare 0 e of
-                          LT -> take e ss ++
-                                (let bt = all (== '0') (drop e ss)
-                                 in if bt then "" else '.' : drop e ss)
-                                ++ (if fromIntegral n - e < 0
-                                    then 'e' : show (e - fromIntegral n)
-                                    else "")
-                          GT -> let ee = fromIntegral dec + e in
-                                if ee <= 0 then "0" else
-                                   head ss : '.' : (backtrim . tail . take ee) ss
-                                            ++ "e" ++ show (pred e)
-                          EQ -> "0." ++ let bt = all (== '0') ss
-                                        in if bt then "0" else ss
-                  where (str, e') = mpfrToString Near n 10 d
-                        n        = Prelude.max dec 5
-                        e = fromIntegral e'
-                        (s, ss) = case head str of
-                                    '-' -> ("-", tail str)
-                                    _   -> ("" , str)
-                        backtrim = reverse . dropWhile (== '0') . reverse
 
 #include "MPFR/types.hhs"
 #include "MPFR/conversion.h"
 
 instance Show Rounded where
-    show = toStringExp 16
+    show = toStringReadback
 
 {- 5.5 Basic Arithmetic Functions -}
 

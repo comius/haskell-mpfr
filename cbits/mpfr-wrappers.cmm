@@ -297,6 +297,48 @@ again:
   return (W_[dec], ret - SIZEOF_StgArrWords);
 }
 
+mpfr_cmm_readbackstr(W_ ps, W_ exp, P_ limbs)
+{
+  W_ ret;
+  W_ mpfr;
+
+again:
+  STK_CHK_GEN_N(SIZEOF_MPFR + WDS(1));
+  MAYBE_GC(again);
+
+  mpfr = Sp - 1 * SIZEOF_MPFR;
+
+  MPFR_REBUILD(ps, exp, limbs, mpfr)
+
+  W_ ret;
+  ret = Sp - 1 * SIZEOF_MPFR - WDS(1);
+  
+  ccall mpfr_asprintf(ret "ptr", "%Re", mpfr "ptr");
+  
+  return (W_[ret] - SIZEOF_StgArrWords);
+}
+
+mpfr_cmm_asprintf(W_ format, W_ precision, W_ rnd, W_ ps, W_ exp, P_ limbs)
+{
+  W_ ret;
+  W_ mpfr;
+
+again:
+  STK_CHK_GEN_N(SIZEOF_MPFR + WDS(1));
+  MAYBE_GC(again);
+
+  mpfr = Sp - 1 * SIZEOF_MPFR;
+
+  MPFR_REBUILD(ps, exp, limbs, mpfr)
+
+  W_ ret;
+  ret = Sp - 1 * SIZEOF_MPFR - WDS(1);
+  
+  ccall mpfr_asprintf(ret "ptr", format "ptr", precision, rnd, mpfr "ptr");
+  
+  return (W_[ret] - SIZEOF_StgArrWords);
+}
+
 
 #define MPFR_COMPARISON(name,cmp)                             \
 name(W_ ps1, W_ exp1, P_ limbs1, W_ ps2, W_ exp2, P_ limbs2)  \
