@@ -79,7 +79,6 @@ foreign import prim "mpfr_cmm_init_z_2exp" mpfrEncode#
 set :: RoundMode -> Precision -> Rounded -> Rounded
 set = unary mpfrFromMpfr#
 
---set_ :: RoundMode -> Precision -> Rounded -> (Rounded, Int)
 
 posInf :: Rounded
 posInf = Rounded s (-0x8000000000000000# +# 3#) l
@@ -95,13 +94,12 @@ zero :: Rounded
 zero = fromInt Near 2 0
 
 negZero :: Rounded
-negZero = negate zero
+negZero = neg Down 2 zero
 
 fromInt :: RoundMode -> Precision -> Int -> Rounded
 fromInt r p (I# i#) = Rounded s e l where
     (# s, e, l #) = mpfrFromInt# (mode# r) (prec# p) i#
 
---fromInt_ :: RoundMode -> Precision -> Int -> (Rounded, Int)
 
 fromIntegerA :: RoundMode -> Precision -> Integer -> Rounded
 fromIntegerA r p (S# i) = Rounded s e l where
@@ -111,14 +109,12 @@ fromIntegerA r p (J# i xs) = Rounded s e l where
 
 --fromString :: String -> Precision -> GHC.Types.Word -> Rounded
 --fromWord :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
---fromWord_ :: RoundMode -> Precision -> GHC.Types.Word -> (Rounded, Int)
 
 -- | Construct a rounded floating point number directly from a 'Double'.
 fromDouble :: RoundMode -> Precision -> Double -> Rounded
 fromDouble r p (D# d) = Rounded s e l where
     (# s, e, l #) = mfprFromDouble# (mode# r) (prec# p) d
 
---fromDouble_ :: RoundMode -> Precision -> Double -> (Rounded, Int)
 --stringToMPFR :: RoundMode -> Precision -> GHC.Types.Word -> String -> Rounded
 --stringToMPFR_ :: RoundMode -> Precision -> GHC.Types.Word -> String -> (Rounded, Int)
 --strtofr ::RoundMode -> Precision -> GHC.Types.Word -> String -> (Rounded, String)
@@ -131,6 +127,11 @@ fromRationalA r p rat = Rounded s e l where
     !(# n, ns #) = toInt# $ numerator rat
     !(# d, ds #) = toInt# $ denominator rat
     (# s, e, l #) = mpfrFromRational# (mode# r) (prec# p) n ns d ds
+
+fromInteger2Exp :: RoundMode -> Precision -> Integer -> Int -> Rounded 
+fromInteger2Exp r p i (I# exp) = Rounded s e l where
+  !(# n, ns #) = toInt# i
+  (# s, e, l #) = mpfrEncode# (mode# r) (prec# p) exp n ns
 
 {-
 int2i :: RoundMode -> Precision -> Int -> Int -> Rounded
