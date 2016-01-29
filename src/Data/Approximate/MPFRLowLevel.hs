@@ -15,7 +15,7 @@ module Data.Approximate.MPFRLowLevel (
 #  include "MPFR/export.hhs"
 -- * Assignment functions
   set,
-  posInf, negInf, zero, naN,  
+  posInf, negInf, zero, negZero, nan,  
   fromInt, fromIntegerA, fromDouble, fromRationalA,
 
 -- * Conversion functions  
@@ -88,14 +88,14 @@ negInf :: Rounded
 negInf = Rounded s (-0x8000000000000000# +# 3#) l
   where (!Rounded s _ l) = fromInt Near 2 (-1)
 
-naN = Rounded s (-0x8000000000000000# +# 2#) l
+nan = Rounded s (-0x8000000000000000# +# 2#) l
   where (!Rounded s _ l) = zero
 
 zero :: Rounded
 zero = fromInt Near 2 0
 
---negZero :: Rounded
---negZero = negate zero
+negZero :: Rounded
+negZero = negate zero
 
 fromInt :: RoundMode -> Precision -> Int -> Rounded
 fromInt r p (I# i#) = Rounded s e l where
