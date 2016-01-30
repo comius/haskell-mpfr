@@ -9,7 +9,7 @@
 module Data.Approximate.MPFR.Types (
    constf, unary, unary2, unary_,binary,binary_,ternary, cmpf,rounding, test, rtest, Rounded (..), RoundMode (..), 
       Precision, Const, Unary, Unary2, Binary,Ternary, Comparison, Rounding, Test, RTest,
-      CExp#, CPrec#, CSignPrec#, mode#, prec#, RoundedOut#, CRounding#, Exp, CPrecision#, getPrec
+      CExp#, CPrec#, CSignPrec#, mode#, prec#, RoundedOut#, RoundedOut_#, CRounding#, Exp, CPrecision#, getPrec
 ) where
 import Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan)
 import Data.Bits

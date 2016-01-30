@@ -348,7 +348,7 @@ again:
   return (W_[ret] - SIZEOF_StgArrWords);
 }
 
-mpfr_cmm_asprintf(W_ format, W_ precision, W_ rnd, W_ ps, W_ exp, P_ limbs)
+mpfr_cmm_asprintf(P_ format, W_ precision, W_ rnd, W_ ps, W_ exp, P_ limbs)
 {
   W_ ret;
   W_ mpfr;
@@ -734,4 +734,50 @@ again:
   (ternary) = ccall mpfr_yn(ret "ptr", x, op, rnd);
 
   MPFR_RETURN1(ret);  
+}
+
+mpfr_cmm_lgamma(W_ rnd, W_ prec, W_ ps, W_ exp, P_ limbs)
+{
+  W_ op, ret, signp;
+  W_ ternary;
+  
+again:
+  STK_CHK_GEN_N(2 * SIZEOF_MPFR + WDS(1));
+  MAYBE_GC(again); 
+
+  op = Sp - 1 * SIZEOF_MPFR;
+  ret = Sp - 2 * SIZEOF_MPFR;
+  signp = Sp - 2 * SIZEOF_MPFR - WDS(1);
+  
+  MPFR_REBUILD(ps, exp, limbs, op);
+  
+  ccall mpfr_init2(ret "ptr", prec);
+  
+  (ternary) = ccall mpfr_lgamma(ret "ptr", signp "ptr", op "ptr" , rnd);
+
+  MPFR_RETURN1_(ret, W_[signp]);  
+}
+
+mpfr_cmm_remquo(W_ rnd, W_ prec, W_ ps, W_ exp, P_ limbs, W_ ps2, W_ exp2, P_ limbs2)
+{
+  W_ op, op2, ret, quop;
+  W_ ternary;
+  
+again:
+  STK_CHK_GEN_N(3 * SIZEOF_MPFR + WDS(1));
+  MAYBE_GC(again); 
+
+  op = Sp - 1 * SIZEOF_MPFR;
+  op2 = Sp - 2 * SIZEOF_MPFR;
+  ret = Sp - 3 * SIZEOF_MPFR;
+  quop = Sp - 3 * SIZEOF_MPFR - WDS(1);
+  
+  MPFR_REBUILD(ps, exp, limbs, op);
+  MPFR_REBUILD(ps2, exp2, limbs2, op2);
+  
+  ccall mpfr_init2(ret "ptr", prec);
+  
+  (ternary) = ccall mpfr_remquo(ret "ptr", quop "ptr", op, op2, rnd);
+
+  MPFR_RETURN1_(ret, W_[quop]);  
 }

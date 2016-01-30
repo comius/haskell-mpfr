@@ -34,10 +34,11 @@ module Data.Approximate.MPFRLowLevel (
 
 -- * Special functions
 # include "MPFR/special.h"
-  facw, zetaw, jn, yn,
+  facw, zetaw, jn, yn, lgamma,
 
 -- * Integer functions
 # include "MPFR/integer.h"
+  remquo,
    
 -- * Miscellaneous functions
   nextAbove, nextBelow, nextToward, copySign,
@@ -388,6 +389,8 @@ foreign import prim "mpfr_cmm_jn" mpfrJn#
 foreign import prim "mpfr_cmm_yn" mpfrYn#
   :: CRounding# -> CPrecision# -> Int# -> CSignPrec# -> CExp# -> ByteArray# -> RoundedOut#
 
+foreign import prim "mpfr_cmm_lgamma" mpfrLGamma#
+  :: CRounding# -> CPrecision# -> CSignPrec# -> CExp# -> ByteArray# -> RoundedOut_#
 
 facw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
 facw r p (W# x) = Rounded s' e' l' where
@@ -406,9 +409,22 @@ yn :: RoundMode -> Precision -> Int -> Rounded -> Rounded
 yn r p (I# x) (Rounded s e l) = Rounded s' e' l' where
     (# s', e', l' #) = mpfrYn# (mode# r) (prec# p) x s e l 
 
+lgamma :: RoundMode -> Precision -> Rounded -> (Int32, Rounded)
+lgamma r p (Rounded s e l) = (fromIntegral (I# i), Rounded s' e' l') where
+    (# s', e', l', i #) = mpfrLGamma# (mode# r) (prec# p) s e l
+
+
 {- 5.10 Integer and Remainder related functions -}
 
 #include "MPFR/integer.h"
+
+foreign import prim "mpfr_cmm_remquo" mpfrRemquo#
+  :: CRounding# -> CPrecision# -> CSignPrec# -> CExp# -> ByteArray# -> CSignPrec# -> CExp# -> ByteArray# -> RoundedOut_#
+
+remquo :: RoundMode -> Precision -> Rounded -> Rounded -> (Int, Rounded)
+remquo r p (Rounded s e l) (Rounded s2 e2 l2) = (I# i, Rounded s' e' l') where
+    (# s', e', l', i #) = mpfrRemquo# (mode# r) (prec# p) s e l s2 e2 l2
+
 
 {-
 remquo :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
