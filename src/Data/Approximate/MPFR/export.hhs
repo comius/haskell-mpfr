@@ -4,7 +4,7 @@
 #define CONST(hname,cname) hname,
 #define UNARY2(hname,cname) hname,
 #define TERNARY(name) name,
-#define COMPARISON(name) name,
+#define COMPARISON(hname, cname) hname,
 #define ROUNDING(name) name,
 #define TEST(hname, cname) hname,
 #define RTEST(hname, cname) hname,

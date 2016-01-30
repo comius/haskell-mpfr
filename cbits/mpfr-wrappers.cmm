@@ -293,6 +293,36 @@ again:
   return (ret);
 }
 
+mpfr_cmm_cmpabs(W_ ps1, W_ exp1, P_ limbs1, W_ ps2, W_ exp2, P_ limbs2)
+{
+  /* arguments: R1 = prec * sign, R2 = exp, R3 = limbs
+                R4 = prec * sign, R5 = exp, R6 = limbs
+   */
+  W_ ret, err, op1, op2;
+
+again:
+  STK_CHK_GEN_N(SIZEOF_MPFR * 2);
+  MAYBE_GC(again);
+
+  op1 = Sp - 1 * SIZEOF_MPFR;
+  op2 = Sp - 2 * SIZEOF_MPFR;
+
+  MPFR_REBUILD(ps1, exp1, limbs1, op1);
+  MPFR_REBUILD(ps2, exp2, limbs2, op2);
+
+  ccall mpfr_clear_erangeflag();
+  (ret) = ccall mpfr_cmpabs(op1 "ptr",op2 "ptr");
+  if (ret == 0) {
+    (err) = ccall mpfr_erangeflag_p();
+    if (err != 0) {
+      ccall mpfr_clear_erangeflag();
+    }
+    ret = err;
+  }
+  return (ret);
+}
+
+
 mpfr_cmm_get_str(W_ rnd, W_ n, W_ base, W_ ps, W_ exp, P_ limbs)
 {
   // arguments: R1 = rounding mode, R2 = output precision,R3 = output number base, R4 = prec * sign, R5 = exp, R6 = limbs
@@ -612,7 +642,7 @@ MPFR_TAKE1_RET1(mpfr_cmm_set,  mpfr_set)
 #define CONST(hname, cname) MPFR_CONSTANT(mpfr_cmm_##cname, mpfr_##cname)
 #define UNARY2(hname,cname) MPFR_TAKE1_RET2(mpfr_cmm_##cname, mpfr_##cname)
 #define TERNARY(name) MPFR_TAKE3_RET1(mpfr_cmm_##name, mpfr_##name)
-#define COMPARISON(name) MPFR_COMPARISON(mpfr_cmm_##name##_p, mpfr_##name##_p)
+#define COMPARISON(hname,cname) MPFR_COMPARISON(mpfr_cmm_##cname, mpfr_##cname)
 #define ROUNDING(name) MPFR_ROUNDING(mpfr_cmm_##name, mpfr_##name)
 #define RTEST(hname,cname) MPFR_RTEST(mpfr_cmm_##cname, mpfr_##cname)
 #define TEST(hname,cname) MPFR_TEST(mpfr_cmm_##cname, mpfr_##cname)

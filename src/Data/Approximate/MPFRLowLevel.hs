@@ -29,7 +29,7 @@ module Data.Approximate.MPFRLowLevel (
   mul2i, div2i, root,
 
 -- * Comparison functions
-  isNaN, isInfinite, isZero, cmp,
+  isNaN, isInfinite, isZero, cmp, cmpAbs,
 # include "MPFR/comparison.h"
 
 -- * Special functions
@@ -317,13 +317,13 @@ wpoww_ ::
 foreign import prim "mpfr_cmm_cmp" mpfrCmp# :: CSignPrec# -> CExp# -> ByteArray#
                        -> CSignPrec# -> CExp# -> ByteArray# -> Int#
 
+foreign import prim "mpfr_cmm_cmpabs" mpfrCmpAbs# :: CSignPrec# -> CExp# -> ByteArray#
+                       -> CSignPrec# -> CExp# -> ByteArray# -> Int#
+
 foreign import prim "mpfr_cmm_sgn" mpfrSgn# :: CSignPrec# -> CExp# -> ByteArray# -> Int#
 
 #include "MPFR/comparison.h"
 
-greatereq = greaterequal
-lesseq = lessequal
-notequal = lessgreater
 minD = Data.Approximate.MPFRLowLevel.min
 maxD = Data.Approximate.MPFRLowLevel.max
 
@@ -331,14 +331,19 @@ cmp :: Rounded -> Rounded -> Maybe Ordering
 cmp a b | unordered a b  = Nothing
 cmp (Rounded s e l) (Rounded s' e' l') = Just (compare (fromIntegral (I# (mpfrCmp# s e l s' e' l'))) (0 :: Int32)) 
 
+cmpAbs :: Rounded -> Rounded -> Maybe Ordering
+cmpAbs a b | unordered a b  = Nothing
+cmpAbs (Rounded s e l) (Rounded s' e' l') = Just (compare (fromIntegral (I# (mpfrCmpAbs# s e l s' e' l'))) (0 :: Int32)) 
+
+
 instance Eq Rounded where
   (==) = equal
-  (/=) = notequal
+  (/=) = notEqual
 
 instance Ord Rounded where
   compare (Rounded s e l) (Rounded s' e' l') = compare (fromIntegral (I# (mpfrCmp# s e l s' e' l'))) (0 :: Int32) -- TODO opt
-  (<=) = lesseq
-  (>=) = greatereq
+  (<=) = lessEq
+  (>=) = greaterEq
   (<) = less
   (>) = greater
   {- TODO
@@ -355,20 +360,13 @@ isInfinite (Rounded _ e _) = isTrue# (e ==# -0x8000000000000000# +# 3#)
 isZero :: Rounded -> Bool
 isZero (Rounded _ e _) = isTrue# (e ==# -0x8000000000000000# +# 1#)
 
-{-cmp :: Rounded -> Rounded -> Maybe Ordering
-
+{-
 cmpd :: Rounded -> Double -> Maybe Ordering
 cmpi :: Rounded -> Int -> Maybe Ordering
 cmpw :: Rounded -> GHC.Types.Word -> Maybe Ordering
 cmp2i :: Rounded -> Int -> Exp -> Maybe Ordering
 cmp2w :: Rounded -> GHC.Types.Word -> Exp -> Maybe Ordering
 
-cmpabs :: Rounded -> Rounded -> Maybe Ordering
-
-unordered :: Rounded -> Rounded -> Maybe Bool
-
-isInteger :: Rounded -> Bool
-isNumber :: Rounded -> Bool
 sgn :: Rounded -> Maybe Int
 
 --}

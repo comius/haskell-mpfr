@@ -30,10 +30,10 @@ foreign import prim LONGNAME(name) mpfr##name :: Ternary \
 name :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> Rounded \
 name = ternary mpfr##name 
 
-#define COMPARISON(name) \
-foreign import prim LONGNAME(name##_p) mpfr##name##_p :: Comparison \
-name :: Rounded -> Rounded -> Bool \
-name = cmpf mpfr##name##_p 
+#define COMPARISON(hname, cname) \
+foreign import prim LONGNAME(cname) mpfr##cname :: Comparison \
+hname :: Rounded -> Rounded -> Bool \
+hname = cmpf mpfr##cname 
 
 #define ROUNDING(name) \
 foreign import prim LONGNAME(name) mpfr##name :: Rounding \
