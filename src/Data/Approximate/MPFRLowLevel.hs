@@ -29,7 +29,7 @@ module Data.Approximate.MPFRLowLevel (
   mul2i, div2i, root,
 
 -- * Comparison functions
-  isNaN, isInfinite, isZero,
+  isNaN, isInfinite, isZero, cmp,
 # include "MPFR/comparison.h"
 
 -- * Special functions
@@ -326,6 +326,10 @@ lesseq = lessequal
 notequal = lessgreater
 minD = Data.Approximate.MPFRLowLevel.min
 maxD = Data.Approximate.MPFRLowLevel.max
+
+cmp :: Rounded -> Rounded -> Maybe Ordering
+cmp a b | unordered a b  = Nothing
+cmp (Rounded s e l) (Rounded s' e' l') = Just (compare (fromIntegral (I# (mpfrCmp# s e l s' e' l'))) (0 :: Int32)) 
 
 instance Eq Rounded where
   (==) = equal

@@ -7,7 +7,7 @@
         -- |
 
 module Data.Approximate.MPFR.Types (
-   constf, unary, unary2, unary_,binary,binary_,ternary, cmp,rounding, test, rtest, Rounded (..), RoundMode (..), 
+   constf, unary, unary2, unary_,binary,binary_,ternary, cmpf,rounding, test, rtest, Rounded (..), RoundMode (..), 
       Precision, Const, Unary, Unary2, Binary,Ternary, Comparison, Rounding, Test, RTest,
       CExp#, CPrec#, CSignPrec#, mode#, prec#, RoundedOut#, CRounding#, Exp, CPrecision#, getPrec
 ) where
@@ -211,9 +211,9 @@ ternary f r p (Rounded s e l) (Rounded s' e' l') (Rounded s'' e'' l'') = Rounded
 {-# INLINE ternary #-}
 
 
-cmp :: Comparison -> Rounded -> Rounded -> Bool
-cmp f (Rounded s e l) (Rounded s' e' l') = I# (f s e l s' e' l') /= 0
-{-# INLINE cmp #-}
+cmpf :: Comparison -> Rounded -> Rounded -> Bool
+cmpf f (Rounded s e l) (Rounded s' e' l') = I# (f s e l s' e' l') /= 0
+{-# INLINE cmpf #-}
 
 rounding :: Rounding -> Precision -> Rounded -> Rounded
 rounding f p (Rounded s e l) = Rounded s' e' l' where
