@@ -472,6 +472,26 @@ again:                                       \
 MPFR_INPLACE(mpfr_cmm_nextabove, mpfr_nextabove)
 MPFR_INPLACE(mpfr_cmm_nextbelow, mpfr_nextbelow)
 
+mpfr_cmm_nexttoward(W_ ps, W_ exp, P_ limbs, W_ ps2, W_ exp2, P_ limbs2)
+{
+  W_ o1, o2;
+
+
+again:
+  STK_CHK_GEN_N(SIZEOF_MPFR * 2);
+  MAYBE_GC(again);
+
+  o1 = Sp - 1 * SIZEOF_MPFR;
+  o2 = Sp - 2 * SIZEOF_MPFR;
+  MPFR_REBUILD(ps, exp, limbs, o1);
+  MPFR_REBUILD(ps2, exp2, limbs2, o2);
+
+  ccall mpfr_nexttoward(o1 "ptr", o2 "ptr");
+
+  MPFR_RETURN1(o1);
+}
+
+
 #define MPFR_TAKE1_RET1(name,mpfr_fun)                            \
 name(W_ rnd, W_ prec, W_ ps, W_ exp, P_ limbs)                    \
 {                                                                 \
