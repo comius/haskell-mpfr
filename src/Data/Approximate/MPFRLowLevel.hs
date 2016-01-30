@@ -40,6 +40,7 @@ module Data.Approximate.MPFRLowLevel (
 # include "MPFR/integer.h"
    
 -- * Miscellaneous functions
+  nextAbove, nextBelow,
   getPrec,
   getExp,
 ) where
@@ -432,6 +433,19 @@ nextBelow :: Rounded -> Rounded
 
 -}
 
+type Inplace = CSignPrec# -> CExp# -> ByteArray# -> (# CSignPrec#, CExp#, ByteArray# #)
+
+foreign import prim "mpfr_cmm_nextabove" mpfrNextAbove# :: Inplace
+foreign import prim "mpfr_cmm_nextbelow" mpfrNextBelow# :: Inplace
+
+inplace :: Inplace -> Rounded -> Rounded
+inplace f (Rounded s e l) = Rounded s' e' l'
+  where (# s', e', l' #) = f s e l
+{-# INLINE inplace #-}
+
+nextAbove, nextBelow :: Rounded -> Rounded
+nextAbove = inplace mpfrNextAbove#
+nextBelow = inplace mpfrNextBelow#
 
 getExp :: Rounded -> Exp
 getExp (Rounded _ e# _) = I64# e#
