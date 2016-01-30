@@ -29,7 +29,7 @@ module Data.Approximate.MPFRLowLevel (
   mul2i, div2i, root,
 
 -- * Comparison functions
-  isNaN, isInfinite, isZero, cmp, cmpAbs,
+  isNaN, isInfinite, isZero, cmp, cmpAbs, sgn,
 # include "MPFR/comparison.h"
 
 -- * Special functions
@@ -320,8 +320,6 @@ foreign import prim "mpfr_cmm_cmp" mpfrCmp# :: CSignPrec# -> CExp# -> ByteArray#
 foreign import prim "mpfr_cmm_cmpabs" mpfrCmpAbs# :: CSignPrec# -> CExp# -> ByteArray#
                        -> CSignPrec# -> CExp# -> ByteArray# -> Int#
 
-foreign import prim "mpfr_cmm_sgn" mpfrSgn# :: CSignPrec# -> CExp# -> ByteArray# -> Int#
-
 #include "MPFR/comparison.h"
 
 minD = Data.Approximate.MPFRLowLevel.min
@@ -360,15 +358,18 @@ isInfinite (Rounded _ e _) = isTrue# (e ==# -0x8000000000000000# +# 3#)
 isZero :: Rounded -> Bool
 isZero (Rounded _ e _) = isTrue# (e ==# -0x8000000000000000# +# 1#)
 
+TEST(sgn#,sgn)
+
+sgn :: Rounded -> Maybe Int
+sgn r | isNaN r = Nothing
+sgn (Rounded s e l) = Just $ I# (mpfrsgn# s e l)
+
 {-
 cmpd :: Rounded -> Double -> Maybe Ordering
 cmpi :: Rounded -> Int -> Maybe Ordering
 cmpw :: Rounded -> GHC.Types.Word -> Maybe Ordering
 cmp2i :: Rounded -> Int -> Exp -> Maybe Ordering
 cmp2w :: Rounded -> GHC.Types.Word -> Exp -> Maybe Ordering
-
-sgn :: Rounded -> Maybe Int
-
 --}
 
 {- 5.7 Special Functions -}
