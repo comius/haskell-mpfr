@@ -1,6 +1,4 @@
 {-# OPTIONS_GHC -F -pgmF script/cpphs -optF--layout -optF--hashes #-}
-{- -# LANGUAGE CPP #-}
-{- -# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE GHCForeignImportPrim #-} -- foreign import prim
 {-# LANGUAGE MagicHash #-} -- postfix # on identifiers
@@ -16,7 +14,7 @@ module Data.Approximate.MPFRLowLevel (
 -- * Assignment functions
   set,
   posInf, negInf, zero, negZero, nan,  
-  fromInt, fromIntegerA, fromDouble, fromRationalA, strtofr,
+  fromInt, fromIntegerA, fromDouble, fromRationalA, fromInteger2Exp, strtofr,
 
 -- * Conversion functions  
   toRationalA, toDoubleA, toDouble2Exp,  toInteger2Exp,
@@ -46,9 +44,7 @@ module Data.Approximate.MPFRLowLevel (
   getExp,
 ) where
 import Prelude as Prelude hiding (isNaN, isInfinite, div, sqrt, exp, log, sin, cos, tan, asin, acos, atan, pi, abs, min, max, floor, round, sinh, cosh,tanh, acosh, asinh, atanh, atan2)
-import qualified Prelude(floor, max)
 import Data.Bits
-import Data.List (isInfixOf)
 import Data.Ratio
 import GHC.CString -- unpackCString
 import GHC.Int -- Int32#
@@ -83,8 +79,8 @@ foreign import prim "mpfr_cmm_strtofr" mpfrFromStr#
   :: CRounding# -> CPrecision# -> Int# -> Addr# -> (# CSignPrec#, CExp#, ByteArray#, Addr#, Int# #) 
 
 strtofr :: RoundMode -> Precision -> Int -> String -> (Rounded, String, Int32)
-strtofr r p (I# i) str = (Rounded s e l, "", I32# (narrow32Int# ternary)) where
-  (# s, e, l, a, ternary #) = mpfrFromStr# (mode# r) (prec# p) i (byteArrayContents# (packCString# str))
+strtofr r p (I# i) str = (Rounded s e l, "", I32# (narrow32Int# tr)) where
+  (# s, e, l, _, tr #) = mpfrFromStr# (mode# r) (prec# p) i (byteArrayContents# (packCString# str))
 
 set :: RoundMode -> Precision -> Rounded -> Rounded
 set = unary mpfrFromMpfr#
@@ -97,6 +93,7 @@ negInf :: Rounded
 negInf = Rounded s (-0x8000000000000000# +# 3#) l
   where (!Rounded s _ l) = fromInt Near 2 (-1)
 
+nan :: Rounded
 nan = Rounded s (-0x8000000000000000# +# 2#) l
   where (!Rounded s _ l) = zero
 
@@ -139,9 +136,9 @@ fromRationalA r p rat = Rounded s e l where
     (# s, e, l #) = mpfrFromRational# (mode# r) (prec# p) n ns d ds
 
 fromInteger2Exp :: RoundMode -> Precision -> Integer -> Int -> Rounded 
-fromInteger2Exp r p i (I# exp) = Rounded s e l where
+fromInteger2Exp r p i (I# ex) = Rounded s e l where
   !(# n, ns #) = toInt# i
-  (# s, e, l #) = mpfrEncode# (mode# r) (prec# p) exp n ns
+  (# s, e, l #) = mpfrEncode# (mode# r) (prec# p) ex n ns
 
 {-
 int2i :: RoundMode -> Precision -> Int -> Int -> Rounded
@@ -153,8 +150,6 @@ int2w_ :: RoundMode -> Precision -> GHC.Types.Word -> Int -> (Rounded, Int)
 {- 5.4 Conversion Functions -}
 
 {-
-toDouble :: RoundMode -> Rounded -> Double
-toDouble2exp :: RoundMode -> Rounded -> (Double, Int)
 toInt :: RoundMode -> Rounded -> Int
 toWord :: RoundMode -> Rounded -> GHC.Types.Word
 -}
@@ -186,8 +181,8 @@ toDoubleA r (Rounded sp e l) =
     let d = mpfrGetDouble# (mode# r) sp e l in D# d
 
 toDouble2Exp :: RoundMode -> Rounded -> (Double, Int)
-toDouble2Exp r (Rounded sp e l) =
-    let (# d, exp #) = mpfrGetDouble2Exp# (mode# r) sp e l in (D# d, I# exp) 
+toDouble2Exp r (Rounded sp e l) = (D# d, I# ex)
+    where (# d, ex #) = mpfrGetDouble2Exp# (mode# r) sp e l
 
 foreign import prim "mpfr_cmm_asprintf" mpfrASPrintf#
   :: Addr# -> Int# -> CRounding# ->
@@ -205,6 +200,7 @@ toStringReadback ::  Rounded -> String
 toStringReadback (Rounded s e l) = unpackCString# (byteArrayContents# str) where
    str = mpfrReadback# s e l
 
+toStringHex, toStringBin, toStringSci, toStringFix, toString :: RoundMode -> Int -> Rounded -> String
 toStringHex  r p d = mpfrASPrintf "%.*R*a"# p r d
 toStringBin r p d = mpfrASPrintf "%.*R*b"# p r d
 toStringSci r p d = mpfrASPrintf "%.*R*e"# p r d
@@ -233,13 +229,11 @@ instance Show Rounded where
 
 #include "MPFR/arithmetics.h"
 
-absD = Data.Approximate.MPFRLowLevel.abs
-
 mul2i :: RoundMode -> Precision -> Rounded -> Int -> Rounded
-mul2i r p (Rounded s e l) (I# i) = Rounded s (e +# i) l
+mul2i _ _ (Rounded s e l) (I# i) = Rounded s (e +# i) l
 
 div2i :: RoundMode -> Precision -> Rounded -> Int -> Rounded
-div2i r p (Rounded s e l) (I# i) = Rounded s (e -# i) l
+div2i _ _ (Rounded s e l) (I# i) = Rounded s (e -# i) l
 
 
 
@@ -330,9 +324,6 @@ foreign import prim "mpfr_cmm_cmpabs" mpfrCmpAbs# :: CSignPrec# -> CExp# -> Byte
                        -> CSignPrec# -> CExp# -> ByteArray# -> Int#
 
 #include "MPFR/comparison.h"
-
-minD = Data.Approximate.MPFRLowLevel.min
-maxD = Data.Approximate.MPFRLowLevel.max
 
 cmp :: Rounded -> Rounded -> Maybe Ordering
 cmp a b | unordered a b  = Nothing
@@ -434,11 +425,6 @@ remquo r p (Rounded s e l) (Rounded s2 e2 l2) = (I# i, Rounded s' e' l') where
     (# s', e', l', i #) = mpfrRemquo# (mode# r) (prec# p) s e l s2 e2 l2
 
 
-{-
-remquo :: RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int)
-remquo_ ::
-  RoundMode -> Precision -> Rounded -> Rounded -> (Rounded, Int, Int)
--}
 
 {- 5.11 Rounding related functions -}
 {-
@@ -446,19 +432,6 @@ maxPrec :: Rounded -> Rounded -> Precision
 -}
 
 {- 5.12 Misc functions-}
-
-{-
-nextToward :: Rounded -> Rounded -> Rounded
-nextAbove :: Rounded -> Rounded
-nextBelow :: Rounded -> Rounded
-
--- newRandomStatePointer ::
---  GHC.Ptr.Ptr hmpfr-0.3.3.5:FFIhelper.GmpRandState
---urandomb ::
---  GHC.Ptr.Ptr hmpfr-0.3.3.5:FFIhelper.GmpRandState
---  -> Precision -> Rounded
-
--}
 
 type Inplace = CSignPrec# -> CExp# -> ByteArray# -> (# CSignPrec#, CExp#, ByteArray# #)
 
@@ -494,21 +467,3 @@ copySign = inplace2 mpfrCopySign#
 getExp :: Rounded -> Exp
 getExp (Rounded _ e# _) = I64# e#
 
-{-
-setExp :: Rounded -> Exp -> Rounded
-
-signbit :: Rounded -> Bool
-
-
-bitsInInteger :: Num a => Integer -> a
-
-compose :: RoundMode -> Precision -> (Integer, Int) -> Rounded
-decompose :: Rounded -> (Integer, Exp)
-
---freeCache :: IO ()
-
-getMantissa :: Rounded -> Integer
-
-one :: Rounded
-
--}
