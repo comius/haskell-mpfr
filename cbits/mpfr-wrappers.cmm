@@ -16,20 +16,7 @@ TODO: check if MPFR_DECL_INIT gives better results than mpfr_init2
   MPFR__mpfr_exp(mpfr) = Y;                                       \
   MPFR__mpfr_d(mpfr) = MPFR_MANGLE_PTR(BYTE_ARR_CTS(Z));
 
-#define MPFR_RETURN1(mpfr)                                        \
-  W_ sign_prec;                                                   \
-  if (MPFR__mpfr_sign(mpfr) <= 1) {                               \
-    sign_prec = MPFR__mpfr_prec(mpfr);                            \
-  } else {                                                        \
-    sign_prec = MPFR__mpfr_prec(mpfr) | (1 << PREC_SHIFT);        \
-  }                                                               \
-                                                                  \
-  return(                                                         \
-    sign_prec,                                                    \
-    MPFR__mpfr_exp(mpfr),                                         \
-    MPFR_UNMANGLE_PTR(MPFR__mpfr_d(mpfr)) - SIZEOF_StgArrWords);
-
-#define MPFR_RETURN1_(mpfr,ternary)                               \
+#define MPFR_RETURN1(mpfr, rets...)                               \
   W_ sign_prec;                                                   \
   if (MPFR__mpfr_sign(mpfr) <= 1) {                               \
     sign_prec = MPFR__mpfr_prec(mpfr);                            \
@@ -41,9 +28,9 @@ TODO: check if MPFR_DECL_INIT gives better results than mpfr_init2
     sign_prec,                                                    \
     MPFR__mpfr_exp(mpfr),                                         \
     MPFR_UNMANGLE_PTR(MPFR__mpfr_d(mpfr)) - SIZEOF_StgArrWords,   \
-    ternary);
+    ## rets);
 
-#define MPFR_RETURN2(mpfr1, mpfr2)                                \
+#define MPFR_RETURN2(mpfr1, mpfr2, rets...)                       \
   W_ sign_prec1;                                                  \
   if (MPFR__mpfr_sign(mpfr1) <= 1) {                              \
     sign_prec1 = MPFR__mpfr_prec(mpfr1);                          \
@@ -63,7 +50,8 @@ TODO: check if MPFR_DECL_INIT gives better results than mpfr_init2
     MPFR_UNMANGLE_PTR(MPFR__mpfr_d(mpfr1)) - SIZEOF_StgArrWords,  \
     sign_prec2,                                                   \
     MPFR__mpfr_exp(mpfr2),                                        \
-    MPFR_UNMANGLE_PTR(MPFR__mpfr_d(mpfr2)) - SIZEOF_StgArrWords);
+    MPFR_UNMANGLE_PTR(MPFR__mpfr_d(mpfr2)) - SIZEOF_StgArrWords,  \
+    ## rets);
 
 mpfr_cmm_init_si(W_ rnd, W_ prec, W_ i)
 {
@@ -556,7 +544,7 @@ again:                                                            \
   ccall mpfr_init2(ret "ptr", prec);                              \
   (ternary) = ccall mpfr_fun(ret "ptr", op1 "ptr", rnd);          \
                                                                   \
-  MPFR_RETURN1_(ret, ternary);                                    \
+  MPFR_RETURN1(ret, ternary);                                    \
 }
 
 #define MPFR_CONSTANT(name,mpfr_constant)                        \
@@ -753,9 +741,9 @@ again:
   
   ccall mpfr_init2(ret "ptr", prec);
   
-  (ternary) = ccall mpfr_lgamma(ret "ptr", signp "ptr", op "ptr" , rnd);
+  (ternary) = ccall mpfr_lgamma(ret "ptr", signp "ptr", op "ptr", rnd);
 
-  MPFR_RETURN1_(ret, W_[signp]);  
+  MPFR_RETURN1(ret, W_[signp]);  
 }
 
 mpfr_cmm_remquo(W_ rnd, W_ prec, W_ ps, W_ exp, P_ limbs, W_ ps2, W_ exp2, P_ limbs2)
@@ -779,5 +767,25 @@ again:
   
   (ternary) = ccall mpfr_remquo(ret "ptr", quop "ptr", op, op2, rnd);
 
-  MPFR_RETURN1_(ret, W_[quop]);  
+  MPFR_RETURN1(ret, W_[quop]);  
+}
+
+mpfr_cmm_strtofr(W_ rnd, W_ prec, W_ base, P_ nptr)
+{
+  W_ endptr;
+  W_ ret;
+  W_ ternary;
+  
+again:
+  STK_CHK_GEN_N(SIZEOF_MPFR + WDS(1));
+  MAYBE_GC(again); 
+
+  ret = Sp - 1 * SIZEOF_MPFR;
+  endptr = Sp - 1 * SIZEOF_MPFR - WDS(1);
+  
+  ccall mpfr_init2(ret "ptr", prec);
+  
+  (ternary) = ccall mpfr_strtofr(ret "ptr", nptr "ptr", endptr "ptr", base, rnd);
+
+  MPFR_RETURN1(ret, W_[endptr], ternary);  
 }

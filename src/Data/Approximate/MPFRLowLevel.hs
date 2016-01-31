@@ -16,7 +16,7 @@ module Data.Approximate.MPFRLowLevel (
 -- * Assignment functions
   set,
   posInf, negInf, zero, negZero, nan,  
-  fromInt, fromIntegerA, fromDouble, fromRationalA,
+  fromInt, fromIntegerA, fromDouble, fromRationalA, strtofr,
 
 -- * Conversion functions  
   toRationalA, toDoubleA, toDouble2Exp,  toInteger2Exp,
@@ -56,6 +56,7 @@ import GHC.Integer.GMP.Internals -- #S, #J
 import GHC.Prim -- Int#, ByteArray#,
 import GHC.Types -- Word
 import GHC.Integer.GMP.Prim (int2Integer#)
+import GHC.Pack
 import Data.Approximate.MPFR.Types
 
 {- 5.2 Assignment Functions -}
@@ -77,6 +78,13 @@ foreign import prim "mpfr_cmm_init_d" mfprFromDouble#
 
 foreign import prim "mpfr_cmm_init_z_2exp" mpfrEncode#
   :: CRounding# -> CPrecision# -> CExp# -> Int# -> ByteArray# -> RoundedOut#
+
+foreign import prim "mpfr_cmm_strtofr" mpfrFromStr#
+  :: CRounding# -> CPrecision# -> Int# -> Addr# -> (# CSignPrec#, CExp#, ByteArray#, Addr#, Int# #) 
+
+strtofr :: RoundMode -> Precision -> Int -> String -> (Rounded, String, Int32)
+strtofr r p (I# i) str = (Rounded s e l, "", I32# (narrow32Int# ternary)) where
+  (# s, e, l, a, ternary #) = mpfrFromStr# (mode# r) (prec# p) i (byteArrayContents# (packCString# str))
 
 set :: RoundMode -> Precision -> Rounded -> Rounded
 set = unary mpfrFromMpfr#
