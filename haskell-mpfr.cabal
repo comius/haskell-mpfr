@@ -14,14 +14,16 @@ cabal-version:      >= 1.22
 tested-with:        
                     GHC == 7.8.1,
                     GHC == 7.8.4
-extra-source-files: cbits/mkMpfrDerivedConstants.c, cbits/alloc.c
 description:
     This package imports functions from MPFR to Haskell in the same way as GMP is alreay imported.
     This package should link correctly on either MacOS X or Linux with GHC 7.8.1 or later.
     .
+extra-source-files: cbits/mkMpfrDerivedConstants.c
+
 source-repository head
   type: git
   location: git://github.com/comius/haskell-mpfr.git
+
 
 library
   exposed-modules:
@@ -36,7 +38,7 @@ library
 
   ghc-options:     -Wall -O2 -fspec-constr -funbox-strict-fields
   c-sources:       cbits/mpfr-wrappers.cmm
-  include-dirs:    dist/include
+  include-dirs:    src,dist/include
 
   hs-source-dirs:  src
   default-language: Haskell2010

@@ -617,11 +617,11 @@ MPFR_TAKE1_RET1(mpfr_cmm_set,  mpfr_set)
 #define TEST(hname,cname) MPFR_TEST(mpfr_cmm_##cname, mpfr_##cname)
 TEST(sgn, sgn)
 
-#include "../../src/Data/Approximate/MPFR/special.h"
-#include "../../src/Data/Approximate/MPFR/arithmetics.h"
-#include "../../src/Data/Approximate/MPFR/comparison.h"
-#include "../../src/Data/Approximate/MPFR/integer.h"
-#include "../../src/Data/Approximate/MPFR/conversion.h"
+#include "Data/Approximate/MPFR/special.h"
+#include "Data/Approximate/MPFR/arithmetics.h"
+#include "Data/Approximate/MPFR/comparison.h"
+#include "Data/Approximate/MPFR/integer.h"
+#include "Data/Approximate/MPFR/conversion.h"
 
 
 
