@@ -38,7 +38,8 @@ inDirectory dir action = do
   return res
 
 mpfrRoot = "deps/mpfr"
-
+getMpfrDist = do
+   canonicalizePath "./deps/mpfrBuild"
 
 pathsWithSuffix :: String -> FilePath -> IO [FilePath]
 pathsWithSuffix suffix path = do
@@ -94,15 +95,17 @@ mpfrHooks = autoconfUserHooks
     , buildHook = mpfrBuildHook
     , postBuild = mpfrPostBuild
     , postClean = mpfrPostClean
+--    , sDistHook = mpfrSDist
     }
   where
   mpfrConfHook (pkg, pbi) flags = do
-    distDir <- getConfigDist flags
+    --distDir <- getConfigDist flags
+    mpfrDist <- getMpfrDist
     lbi <- confHook autoconfUserHooks (pkg, pbi) flags
     let lpd = localPkgDescr lbi
         lib = fromJust (library lpd)
         libbi = libBuildInfo lib
-        libbi' = libbi { extraLibDirs = (distDir </> "lib") : extraLibDirs libbi }
+        libbi' = libbi { extraLibDirs = (mpfrDist </> "lib") : extraLibDirs libbi }
         lib' = lib { libBuildInfo = libbi' }
         lpd' = lpd { library = Just lib' }
     return lbi { localPkgDescr = lpd' }
@@ -111,8 +114,9 @@ mpfrHooks = autoconfUserHooks
   -- shut up about it not being present.
   mpfrPreConf args flags = do
     distDir <- getConfigDist flags
-    createDirectory' $ distDir </> "include"
-    createDirectory' $ distDir </> "lib"
+    mpfrDist <- getMpfrDist
+    createDirectory' $ mpfrDist </> "include"
+    createDirectory' $ mpfrDist </> "lib"
     createDirectory' $ distDir </> "tmp"
     createDirectory' $ distDir </> "tmp_p"
     return emptyHookedBuildInfo
@@ -120,35 +124,38 @@ mpfrHooks = autoconfUserHooks
   mpfrPostConf args flags pkg_descr lbi = do
     postConf simpleUserHooks args flags pkg_descr lbi
     distDir <- getConfigDist flags
-    configureMpfr distDir
+    mpfrDist <- getMpfrDist
+    configureMpfr mpfrDist
 
     
   mpfrPreBuild args flags = do
     preBuild simpleUserHooks args flags
     distDir <- getBuildDist flags
-    makeMpfr distDir
+    mpfrDist <- getMpfrDist
+    makeMpfr mpfrDist
     
     let modified = emptyBuildInfo { extraLibs = ["mpfrPIC"]
                                   , extraLibDirs = [distDir </> "libtmp"]
-                                  , includeDirs = [distDir </> "include"]
+                                  , includeDirs = [mpfrDist </> "include"]
                                   }
 
     return (Just modified, snd emptyHookedBuildInfo)
 
   mpfrBuildHook pkg_descr lbi hooks flags = do
     distDir <- getBuildDist flags
+    mpfrDist <- getMpfrDist
     (ar, _) <- requireProgram silent arProgram defaultProgramDb
     let lbi' = lbi { withPrograms = updateProgram ar (withPrograms lbi) }
 
     putStrLn $ "Determining MPFR constants..."
-    programExists <- doesFileExist $ distDir </> "mkMpfrDerivedConstants"
+    programExists <- doesFileExist $ mpfrDist </> "mkMpfrDerivedConstants"
     unless programExists $ do
       Just gcc <- programFindLocation gccProgram normal defaultProgramSearchPath
-      runOrBomb gcc ["cbits/mkMpfrDerivedConstants.c", "-I/usr/local/Cellar/gmp/5.1.3/include", "-I" ++ distDir </> "include", "-o", distDir </> "mkMpfrDerivedConstants"]
-    headerExists <- doesFileExist $ distDir </> "include" </> "MpfrDerivedConstants.h"
+      runOrBomb gcc ["cbits/mkMpfrDerivedConstants.c", "-I" ++ mpfrDist </> "include", "-o", mpfrDist </> "mkMpfrDerivedConstants"]
+    headerExists <- doesFileExist $ mpfrDist </> "include" </> "MpfrDerivedConstants.h"
     unless headerExists $ do
-      header <- readProcess (distDir </> "mkMpfrDerivedConstants") [] ""
-      writeFile (distDir </> "include" </> "MpfrDerivedConstants.h") header
+      header <- readProcess (mpfrDist </> "mkMpfrDerivedConstants") [] ""
+      writeFile (mpfrDist </> "include" </> "MpfrDerivedConstants.h") header
 
     createDirectory' $ distDir </> "libtmp"
     picObjects <- pathsWithSuffix ".o" $ mpfrRoot </> "src" </> ".libs"
@@ -159,6 +166,7 @@ mpfrHooks = autoconfUserHooks
 
   mpfrPostBuild args flags pkg_descr lbi = do
     distDir <- getBuildDist flags
+    mpfrDist <- getMpfrDist
     (ar, _) <- requireProgram silent arProgram defaultProgramDb
 --    (ranlib, _) <- requireProgram silent ranlibProgram defaultProgramDb
     let lbi' = lbi { withPrograms = updateProgram ar (withPrograms lbi) }
@@ -166,7 +174,7 @@ mpfrHooks = autoconfUserHooks
     putStrLn "Mangling static library..."
     inDirectory (distDir </> "tmp") $ do
       runOrBomb "ar" ["-x", distDir </> "build" </> "libHShaskell-mpfr-0.1.a"]
-      runOrBomb "ar" ["-x", distDir </> "lib" </> "libmpfr.a"]
+      runOrBomb "ar" ["-x", mpfrDist </> "lib" </> "libmpfr.a"]
 
     objects <- pathsWithSuffix ".o" $ distDir </> "tmp"
     --forM_ objects $ \o -> do
@@ -181,7 +189,7 @@ mpfrHooks = autoconfUserHooks
       putStrLn "Mangling static library (prof)..."
       inDirectory (distDir </> "tmp_p") $ do
         runOrBomb "ar" ["-x", distDir </> "build" </> "libHShaskell-mpfr-0.1_p.a"]
-        runOrBomb "ar" ["-x", distDir </> "lib" </> "libmpfr.a"]
+        runOrBomb "ar" ["-x", mpfrDist </> "lib" </> "libmpfr.a"]
 
       objects <- pathsWithSuffix "o" $ distDir </> "tmp_p"
       --forM_ objects $ \o -> do
@@ -197,5 +205,7 @@ mpfrHooks = autoconfUserHooks
     inDirectory mpfrRoot (readProcessWithExitCode "make" ["distclean"] "")
     return ()
 
+{-  mpfrSDist pkg_descr mlbi hooks flags = do
+-}
 main :: IO ()
 main = defaultMainWithHooks mpfrHooks
