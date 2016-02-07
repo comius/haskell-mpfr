@@ -78,65 +78,118 @@ foreign import prim "mpfr_cmm_init_z_2exp" mpfrEncode#
 foreign import prim "mpfr_cmm_strtofr" mpfrFromStr#
   :: CRounding# -> CPrecision# -> Int# -> Addr# -> (# CSignPrec#, CExp#, ByteArray#, Addr#, Int# #) 
 
+{-|
+    Read a floating-point number from a string in base with given 'Precision' and rounded with 'RoundMode';
+    __base__ must be either 0 (to detect the base, as described below) or a number from 2 to 62 
+    (otherwise the behavior is undefined). If string starts with valid data, the result and remaining
+    string (just after the valid data) is returned; otherwise zero and the whole input string is returned
+    (for consistency with strtod). The usual ternary value is returned.
+
+    Parsing follows the standard C @strtod@ function with some extensions. After optional leading
+    whitespace, one has a subject sequence consisting of an optional sign (+ or -), and either numeric 
+    data or special data. The subject sequence is defined as the longest initial subsequence of the input
+    string, starting with the first non-whitespace character, that is of the expected form.
+
+    The form of numeric data is a non-empty sequence of significand digits with an optional decimal point,
+    and an optional exponent consisting of an exponent prefix followed by an optional sign and a non-empty
+    sequence of decimal digits. A significand digit is either a decimal digit or a Latin letter 
+    (62 possible characters), with A = 10, B = 11, …, Z = 35; case is ignored in bases less or equal to
+    36, in bases larger than 36, a = 36, b = 37, …, z = 61. The value of a significand digit must be 
+    strictly less than the base. The decimal point can be either the one defined by the current locale or
+    the period (the first one is accepted for consistency with the C standard and the practice, the second
+    one is accepted to allow the programmer to provide MPFR numbers from strings in a way that does not
+    depend on the current locale). The exponent prefix can be e or E for bases up to 10, or \@ in any base;
+    it indicates a multiplication by a power of the base. In bases 2 and 16, the exponent prefix can also
+    be p or P, in which case the exponent, called __binary exponent__, indicates a multiplication by a power
+    of 2 instead of the base (there is a difference only for base 16); in base 16 for example 1p2 
+    represents 4 whereas 1\@2 represents 256. The value of an exponent is always written in base 10.
+
+    If the argument __base__ is 0, then the base is automatically detected as follows. If the significand 
+    starts with 0b or 0B, base 2 is assumed. If the significand starts with 0x or 0X, base 16 is assumed.
+    Otherwise base 10 is assumed.
+
+    Note: The exponent (if present) must contain at least a digit. Otherwise the possible exponent prefix
+    and sign are not part of the number (which ends with the significand). Similarly, if 0b, 0B, 0x or 0X
+    is not followed by a binary/hexadecimal digit, then the subject sequence stops at the character 0, 
+    thus 0 is read.
+
+    Special data (for infinities and NaN) can be @\@inf\@@ or @\@nan\@(n-char-sequence-opt)@, and if /base <= 16/, 
+    it can also be @infinity@, @inf@, @nan@ or @nan(n-char-sequence-opt)@, all case insensitive. A 
+    @n-char-sequence-opt@ is a possibly empty string containing only digits, Latin letters and the 
+    underscore (0, 1, 2, …, 9, a, b, …, z, A, B, …, Z, _). Note: one has an optional sign for all data,
+    even NaN. For example, @-\@nAn\@(This_Is_Not_17)@ is a valid representation for NaN in base 17.
+ -}
 readRounded :: RoundMode -> Precision -> Int -> ReadS Rounded
 readRounded  r p (I# i) str = [(Rounded s e l, unpackCString# a)] where
   (# s, e, l, a, _ #) = mpfrFromStr# (mode# r) (prec# p) i (byteArrayContents# (packCString# str)) 
 
+{-| Returns the value of op with given Precision and rounded with RoundMode. -}
 set :: RoundMode -> Precision -> Rounded -> Rounded
 set = unary mpfrFromMpfr#
 
-
+{-| Positive infinity. -}
 posInf :: Rounded
 posInf = Rounded s (-0x8000000000000000# +# 3#) l
   where  (!Rounded s _ l) = zero
+
+{-| Negative infinity. -}
 negInf :: Rounded
 negInf = Rounded s (-0x8000000000000000# +# 3#) l
   where (!Rounded s _ l) = fromInt Near 2 (-1)
 
+{-| Not a number. -}
 nan :: Rounded
 nan = Rounded s (-0x8000000000000000# +# 2#) l
   where (!Rounded s _ l) = zero
 
+{-| Positive zero. -}
 zero :: Rounded
 zero = fromInt Near 2 0
 
+{-| Negative zero. -}
 negZero :: Rounded
 negZero = neg Down 2 zero
 
+{-| Constructs 'Rounded' from 'Int' with given Precision and rounded with RoundMode.
+  Note that the input 0 is converted to +0 regardless of the rounding mode. -}
 fromInt :: RoundMode -> Precision -> Int -> Rounded
 fromInt r p (I# i#) = Rounded s e l where
     (# s, e, l #) = mpfrFromInt# (mode# r) (prec# p) i#
 
-
+{-| Constructs 'Rounded' from 'Integer' with given Precision and rounded with RoundMode.
+  Note that the input 0 is converted to +0 regardless of the rounding mode. -}
 fromIntegerA :: RoundMode -> Precision -> Integer -> Rounded
 fromIntegerA r p (S# i) = Rounded s e l where
     (# s, e, l #) = mpfrFromInt# (mode# r) (prec# p) i
 fromIntegerA r p (J# i xs) = Rounded s e l where
     (# s, e, l #) = mpfrFromInteger# (mode# r) (prec# p) i xs
 
---fromString :: String -> Precision -> GHC.Types.Word -> Rounded
 --fromWord :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
 
--- | Construct a rounded floating point number directly from a 'Double'.
+{-| Constructs 'Rounded' from 'Double' with given Precision and rounded with RoundMode.
+  If the system does not support the IEEE 754 standard this function might not preserve the signed zeros.-}
 fromDouble :: RoundMode -> Precision -> Double -> Rounded
 fromDouble r p (D# d) = Rounded s e l where
     (# s, e, l #) = mfprFromDouble# (mode# r) (prec# p) d
 
---stringToMPFR :: RoundMode -> Precision -> GHC.Types.Word -> String -> Rounded
---stringToMPFR_ :: RoundMode -> Precision -> GHC.Types.Word -> String -> (Rounded, Int)
---strtofr ::RoundMode -> Precision -> GHC.Types.Word -> String -> (Rounded, String)
---strtofr_ :: RoundMode  -> Precision -> GHC.Types.Word -> String -> (Rounded, String, Int)
 toInt# :: Integer -> (# Int#, ByteArray# #)
 toInt# (S# x#) = int2Integer# x#
 toInt# (J# x# xs#) =  (# x#, xs# #)
+
+{-| Constructs 'Rounded' from 'Rational' with given Precision and rounded with RoundMode.
+  Note that the input 0 is converted to +0 regardless of the rounding mode.
+  Function might fail if the numerator (or the denominator) can not be represented as a Rounded.-}
 fromRationalA :: RoundMode -> Precision -> Rational -> Rounded
 fromRationalA r p rat = Rounded s e l where
     !(# n, ns #) = toInt# $ numerator rat
     !(# d, ds #) = toInt# $ denominator rat
     (# s, e, l #) = mpfrFromRational# (mode# r) (prec# p) n ns d ds
 
-fromInteger2Exp :: RoundMode -> Precision -> Integer -> Int -> Rounded 
-fromInteger2Exp r p i (I# ex) = Rounded s e l where
+{-| Constructs 'Rounded' from 'Integer' multiplied by two to the power 'Exp'
+   with given Precision and rounded with RoundMode.
+    Note that the input 0 is converted to +0. -} 
+fromInteger2Exp :: RoundMode -> Precision -> Integer -> Exp -> Rounded 
+fromInteger2Exp r p i (I64# ex) = Rounded s e l where
   !(# n, ns #) = toInt# i
   (# s, e, l #) = mpfrEncode# (mode# r) (prec# p) ex n ns
 
