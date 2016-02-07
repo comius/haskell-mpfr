@@ -229,17 +229,22 @@ instance Show Rounded where
 
 #include "MPFR/arithmetics.h"
 
-mul2i :: RoundMode -> Precision -> Rounded -> Int -> Rounded
-mul2i _ _ (Rounded s e l) (I# i) = Rounded s (e +# i) l
+{-| Returns __/@op1@ times 2 raised to @op2@/__. -}
+mul2i :: Rounded -> Int -> Rounded
+mul2i (Rounded s e l) (I# i) = Rounded s (e +# i) l
 
-div2i :: RoundMode -> Precision -> Rounded -> Int -> Rounded
-div2i _ _ (Rounded s e l) (I# i) = Rounded s (e -# i) l
+{- | Returns __/@op1@ divided by 2 raised to @op2@/__. -}
+div2i :: Rounded -> Int -> Rounded
+div2i (Rounded s e l) (I# i) = Rounded s (e -# i) l
 
 
 
 foreign import prim "mpfr_cmm_root" mpfrRoot#
   :: CRounding# -> CPrecision# -> Int# -> CSignPrec# -> CExp# -> ByteArray# -> RoundedOut#
 
+{-| Returns __/the kth root of @op@/__ with given Precision and rounded with RoundMode.
+    For k odd (resp. even) and op negative (including -Inf), returns a negative number (resp. NaN).
+    The kth root of -0 is defined to be -0, whatever the parity of k. -}
 root :: RoundMode -> Precision -> Rounded -> Int -> Rounded
 root r p  (Rounded s e l) (I# x) = Rounded s' e' l' where
     (# s', e', l' #) = mpfrRoot# (mode# r) (prec# p) x s e l

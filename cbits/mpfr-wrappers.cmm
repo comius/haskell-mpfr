@@ -604,7 +604,6 @@ again:                                                            \
 
 MPFR_TAKE1_RET1(mpfr_cmm_set,  mpfr_set)
 
-
 #define UNARY_(hname,cname) MPFR_TAKE1_RET1(mpfr_cmm_##cname, mpfr_##cname)
 #define UNARY(name) MPFR_TAKE1_RET1(mpfr_cmm_##name, mpfr_##name) 
 #define BINARY(name) MPFR_TAKE2_RET1(mpfr_cmm_##name, mpfr_##name)

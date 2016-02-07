@@ -1,51 +1,51 @@
-
+#define DOC |
 #define STR(s) #s
 #define LONGNAME(name) STR(mpfr_cmm_##name)
 
 #define UNARY_(hname,cname) \
-foreign import prim LONGNAME(cname) mpfr##hname :: Unary \
 hname :: RoundMode -> Precision -> Rounded -> Rounded \
+foreign import prim LONGNAME(cname) mpfr##hname :: Unary \
 hname = unary mpfr##hname 
 
 #define UNARY(name) UNARY_(name,name)
 
 #define BINARY(name) \
-foreign import prim LONGNAME(name) mpfr##name :: Binary \
 name :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded \
+foreign import prim LONGNAME(name) mpfr##name :: Binary \
 name = binary mpfr##name 
 
 #define CONST(hname,cname) \
-foreign import prim LONGNAME(cname) mpfr##hname :: Const \
 hname :: RoundMode -> Precision -> Rounded \
+foreign import prim LONGNAME(cname) mpfr##hname :: Const \
 hname = constf mpfr##hname 
 
 #define UNARY2(hname,cname) \
-foreign import prim LONGNAME(cname) mpfr##hname :: Unary2 \
 hname :: RoundMode -> Precision -> Rounded -> (Rounded, Rounded) \
+foreign import prim LONGNAME(cname) mpfr##hname :: Unary2 \
 hname = unary2 mpfr##hname 
 
 
 #define TERNARY(name) \
-foreign import prim LONGNAME(name) mpfr##name :: Ternary \
 name :: RoundMode -> Precision -> Rounded -> Rounded -> Rounded -> Rounded \
+foreign import prim LONGNAME(name) mpfr##name :: Ternary \
 name = ternary mpfr##name 
 
 #define COMPARISON(hname, cname) \
-foreign import prim LONGNAME(cname) mpfr##cname :: Comparison \
 hname :: Rounded -> Rounded -> Bool \
+foreign import prim LONGNAME(cname) mpfr##cname :: Comparison \
 hname = cmpf mpfr##cname 
 
 #define ROUNDING(name) \
-foreign import prim LONGNAME(name) mpfr##name :: Rounding \
 name :: Precision -> Rounded -> Rounded \
+foreign import prim LONGNAME(name) mpfr##name :: Rounding \
 name = rounding mpfr##name
 
 #define RTEST(hname, cname) \
-foreign import prim LONGNAME(cname) mpfr##hname :: RTest \
 hname :: RoundMode -> Rounded -> Bool \
+foreign import prim LONGNAME(cname) mpfr##hname :: RTest \
 hname = rtest mpfr##hname
 
 #define TEST(hname, cname) \
-foreign import prim LONGNAME(cname) mpfr##hname :: Test \
 hname :: Rounded -> Bool \
+foreign import prim LONGNAME(cname) mpfr##hname :: Test \
 hname = test mpfr##hname
