@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# Copyright 2000-2015 Free Software Foundation, Inc.
+# Copyright 2000-2016 Free Software Foundation, Inc.
 # This Makefile.am is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -202,7 +202,7 @@ CSCOPE = cscope
 DIST_SUBDIRS = $(SUBDIRS)
 am__DIST_COMMON = $(srcdir)/Makefile.in AUTHORS COPYING COPYING.LESSER \
 	ChangeLog INSTALL NEWS README TODO ar-lib compile config.guess \
-	config.sub install-sh ltmain.sh missing
+	config.sub depcomp install-sh ltmain.sh missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -383,7 +383,8 @@ nobase_dist_doc_DATA = AUTHORS BUGS COPYING COPYING.LESSER NEWS TODO \
   examples/version.c
 
 EXTRA_DIST = PATCHES VERSION \
-  tools/ck-copyright-notice tools/ck-version-info tools/get_patches.sh \
+  tools/ck-copyright-notice tools/ck-news tools/ck-version-info \
+  tools/get_patches.sh \
   $(DATAFILES)
 
 all: all-recursive
@@ -886,9 +887,11 @@ uninstall-am: uninstall-nobase_dist_docDATA
 #   file doesn't end with "-dev", check that the -version-info value is
 #   up-to-date. Note: this is a heuristic, to detect some mistakes.
 # * Check that copyright notices exist and appear to be correct.
+# * Check the NEWS file.
 dist-hook:
 	cd $(srcdir) && tools/ck-version-info
 	cd $(srcdir) && tools/ck-copyright-notice
+	cd $(srcdir) && tools/ck-news
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

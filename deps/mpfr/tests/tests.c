@@ -1,7 +1,7 @@
 /* Miscellaneous support for test programs.
 
-Copyright 2001-2015 Free Software Foundation, Inc.
-Contributed by the AriC and Caramel projects, INRIA.
+Copyright 2001-2016 Free Software Foundation, Inc.
+Contributed by the AriC and Caramba projects, INRIA.
 
 This file is part of the GNU MPFR Library.
 
@@ -541,7 +541,7 @@ src_fopen (const char *filename, const char *mode)
   FILE *f;
 
   buffsize = strlen (filename) + strlen (srcdir) + 2;
-  buffer = (char *) (*__gmp_allocate_func) (buffsize);
+  buffer = (char *) tests_allocate (buffsize);
   if (buffer == NULL)
     {
       printf ("src_fopen: failed to alloc memory)\n");
@@ -549,7 +549,7 @@ src_fopen (const char *filename, const char *mode)
     }
   sprintf (buffer, "%s/%s", srcdir, filename);
   f = fopen (buffer, mode);
-  (*__gmp_free_func) (buffer, buffsize);
+  tests_free (buffer, buffsize);
   return f;
 #endif
 }

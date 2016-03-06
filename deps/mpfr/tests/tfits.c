@@ -2,8 +2,8 @@
  mpfr_fits_sint_p, mpfr_fits_slong_p, mpfr_fits_sshort_p,
  mpfr_fits_uint_p, mpfr_fits_ulong_p, mpfr_fits_ushort_p
 
-Copyright 2004-2015 Free Software Foundation, Inc.
-Contributed by the AriC and Caramel projects, INRIA.
+Copyright 2004-2016 Free Software Foundation, Inc.
+Contributed by the AriC and Caramba projects, INRIA.
 
 This file is part of the GNU MPFR Library.
 
@@ -33,258 +33,225 @@ http://www.gnu.org/licenses/ or write to the Free Software Foundation, Inc.,
 #include "mpfr-intmax.h"
 #include "mpfr-test.h"
 
-#define ERROR1(N)                                               \
+#define FTEST_AUX(N,NOT,FCT)                                    \
   do                                                            \
     {                                                           \
-      printf("Error %d for rnd = %s and x = ", N,               \
-             mpfr_print_rnd_mode ((mpfr_rnd_t) r));             \
-      mpfr_dump(x);                                             \
-      exit(1);                                                  \
+      __gmpfr_flags = ex_flags;                                 \
+      if (NOT FCT (x, (mpfr_rnd_t) r))                          \
+        {                                                       \
+          printf ("Error %d for %s, rnd = %s and x = ",         \
+                  N, #FCT,                                      \
+                  mpfr_print_rnd_mode ((mpfr_rnd_t) r));        \
+          mpfr_dump (x);                                        \
+          exit (1);                                             \
+        }                                                       \
+      if (__gmpfr_flags != ex_flags)                            \
+        {                                                       \
+          unsigned int flags = __gmpfr_flags;                   \
+          printf ("Flags error %d for %s, rnd = %s and x = ",   \
+                  N, #FCT,                                      \
+                  mpfr_print_rnd_mode ((mpfr_rnd_t) r));        \
+          mpfr_dump(x);                                         \
+          printf ("Expected flags:");                           \
+          flags_out (ex_flags);                                 \
+          printf ("Got flags:     ");                           \
+          flags_out (flags);                                    \
+          exit (1);                                             \
+        }                                                       \
     }                                                           \
   while (0)
 
-static void check_intmax (void);
+#define FTEST(N,NOT,FCT)                                        \
+  do                                                            \
+    {                                                           \
+      mpfr_exp_t e;                                             \
+      FTEST_AUX (N,NOT,FCT);                                    \
+      if (MPFR_IS_SINGULAR (x))                                 \
+        break;                                                  \
+      e = mpfr_get_exp (x);                                     \
+      set_emin (e);                                             \
+      set_emax (e);                                             \
+      FTEST_AUX (N,NOT,FCT);                                    \
+      set_emin (emin);                                          \
+      set_emax (emax);                                          \
+    }                                                           \
+  while (0)
+
+#define CHECK_ALL(N,NOT)                                        \
+  do                                                            \
+    {                                                           \
+      FTEST (N, NOT, mpfr_fits_ulong_p);                        \
+      FTEST (N, NOT, mpfr_fits_slong_p);                        \
+      FTEST (N, NOT, mpfr_fits_uint_p);                         \
+      FTEST (N, NOT, mpfr_fits_sint_p);                         \
+      FTEST (N, NOT, mpfr_fits_ushort_p);                       \
+      FTEST (N, NOT, mpfr_fits_sshort_p);                       \
+    }                                                           \
+  while (0)
+
+#define CHECK_MAX(N,NOT)                                        \
+  do                                                            \
+    {                                                           \
+      FTEST (N, NOT, mpfr_fits_uintmax_p);                      \
+      FTEST (N, NOT, mpfr_fits_intmax_p);                       \
+    }                                                           \
+  while (0)
+
+/* V is a non-zero limit for the type (*_MIN for a signed type or *_MAX).
+ * If V is positive, then test V, V + 1/4, V + 3/4 and V + 1.
+ * If V is negative, then test V, V - 1/4, V - 3/4 and V - 1.
+ */
+#define CHECK_LIM(N,V,SET,FCT)                                  \
+  do                                                            \
+    {                                                           \
+      SET (x, V, MPFR_RNDN);                                    \
+      FTEST (N, !, FCT);                                        \
+      mpfr_set_si_2exp (y, (V) < 0 ? -1 : 1, -2, MPFR_RNDN);    \
+      mpfr_add (x, x, y, MPFR_RNDN);                            \
+      FTEST (N+1, (r == MPFR_RNDN ||                            \
+                   MPFR_IS_LIKE_RNDZ (r, (V) < 0)) ^ !!, FCT);  \
+      mpfr_add (x, x, y, MPFR_RNDN);                            \
+      mpfr_add (x, x, y, MPFR_RNDN);                            \
+      FTEST (N+3, MPFR_IS_LIKE_RNDZ (r, (V) < 0) ^ !!, FCT);    \
+      mpfr_add (x, x, y, MPFR_RNDN);                            \
+      FTEST (N+4, !!, FCT);                                     \
+    }                                                           \
+  while (0)
 
 int
 main (void)
 {
+  mpfr_exp_t emin, emax;
   mpfr_t x, y;
-  int i, r;
+  unsigned int flags[2] = { 0, MPFR_FLAGS_ALL }, ex_flags;
+  int i, r, fi;
 
   tests_start_mpfr ();
 
-  mpfr_init2 (x, 256);
+  emin = mpfr_get_emin ();
+  emax = mpfr_get_emax ();
+
+  mpfr_init2 (x, sizeof (unsigned long) * CHAR_BIT + 2);
   mpfr_init2 (y, 8);
 
   RND_LOOP (r)
+    for (fi = 0; fi < numberof (flags); fi++)
+      {
+        ex_flags = flags[fi];
+
+        /* Check NaN */
+        mpfr_set_nan (x);
+        CHECK_ALL (1, !!);
+
+        /* Check +Inf */
+        mpfr_set_inf (x, 1);
+        CHECK_ALL (2, !!);
+
+        /* Check -Inf */
+        mpfr_set_inf (x, -1);
+        CHECK_ALL (3, !!);
+
+        /* Check +0 */
+        mpfr_set_zero (x, 1);
+        CHECK_ALL (4, !);
+
+        /* Check -0 */
+        mpfr_set_zero (x, -1);
+        CHECK_ALL (5, !);
+
+        /* Check small positive op */
+        mpfr_set_str1 (x, "1@-1");
+        CHECK_ALL (6, !);
+
+        /* Check 17 */
+        mpfr_set_ui (x, 17, MPFR_RNDN);
+        CHECK_ALL (7, !);
+
+        /* Check large values (no fit) */
+        mpfr_set_ui (x, ULONG_MAX, MPFR_RNDN);
+        mpfr_mul_2exp (x, x, 1, MPFR_RNDN);
+        CHECK_ALL (8, !!);
+        mpfr_mul_2exp (x, x, 40, MPFR_RNDN);
+        CHECK_ALL (9, !!);
+
+        /* Check a non-integer number just below a power of two. */
+        mpfr_set_ui_2exp (x, 255, -2, MPFR_RNDN);
+        CHECK_ALL (10, !);
+
+        /* Check the limits of the types (except 0 for unsigned types) */
+        CHECK_LIM (20, ULONG_MAX, mpfr_set_ui, mpfr_fits_ulong_p);
+        CHECK_LIM (30, LONG_MAX, mpfr_set_si, mpfr_fits_slong_p);
+        CHECK_LIM (35, LONG_MIN, mpfr_set_si, mpfr_fits_slong_p);
+        CHECK_LIM (40, UINT_MAX, mpfr_set_ui, mpfr_fits_uint_p);
+        CHECK_LIM (50, INT_MAX, mpfr_set_si, mpfr_fits_sint_p);
+        CHECK_LIM (55, INT_MIN, mpfr_set_si, mpfr_fits_sint_p);
+        CHECK_LIM (60, USHRT_MAX, mpfr_set_ui, mpfr_fits_ushort_p);
+        CHECK_LIM (70, SHRT_MAX, mpfr_set_si, mpfr_fits_sshort_p);
+        CHECK_LIM (75, SHRT_MIN, mpfr_set_si, mpfr_fits_sshort_p);
+
+        /* Check negative op */
+        for (i = 1; i <= 4; i++)
+          {
+            int inv;
+
+            mpfr_set_si_2exp (x, -i, -2, MPFR_RNDN);
+            mpfr_rint (y, x, (mpfr_rnd_t) r);
+            inv = MPFR_NOTZERO (y);
+            FTEST (80, inv ^ !, mpfr_fits_ulong_p);
+            FTEST (81,       !, mpfr_fits_slong_p);
+            FTEST (82, inv ^ !, mpfr_fits_uint_p);
+            FTEST (83,       !, mpfr_fits_sint_p);
+            FTEST (84, inv ^ !, mpfr_fits_ushort_p);
+            FTEST (85,       !, mpfr_fits_sshort_p);
+          }
+      }
+
+#ifdef _MPFR_H_HAVE_INTMAX_T
+
+  mpfr_set_prec (x, sizeof (uintmax_t) * CHAR_BIT + 2);
+
+  RND_LOOP (r)
     {
-
-      /* Check NAN */
+      /* Check NaN */
       mpfr_set_nan (x);
-      if (mpfr_fits_ulong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (1);
-      if (mpfr_fits_slong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (2);
-      if (mpfr_fits_uint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (3);
-      if (mpfr_fits_sint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (4);
-      if (mpfr_fits_ushort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (5);
-      if (mpfr_fits_sshort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (6);
+      CHECK_MAX (1, !!);
 
-      /* Check INF */
+      /* Check +Inf */
       mpfr_set_inf (x, 1);
-      if (mpfr_fits_ulong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (7);
-      if (mpfr_fits_slong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (8);
-      if (mpfr_fits_uint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (9);
-      if (mpfr_fits_sint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (10);
-      if (mpfr_fits_ushort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (11);
-      if (mpfr_fits_sshort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (12);
+      CHECK_MAX (2, !!);
 
-      /* Check Zero */
-      MPFR_SET_ZERO (x);
-      if (!mpfr_fits_ulong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (13);
-      if (!mpfr_fits_slong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (14);
-      if (!mpfr_fits_uint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (15);
-      if (!mpfr_fits_sint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (16);
-      if (!mpfr_fits_ushort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (17);
-      if (!mpfr_fits_sshort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (18);
+      /* Check -Inf */
+      mpfr_set_inf (x, -1);
+      CHECK_MAX (3, !!);
+
+      /* Check +0 */
+      mpfr_set_zero (x, 1);
+      CHECK_MAX (4, !);
+
+      /* Check -0 */
+      mpfr_set_zero (x, -1);
+      CHECK_MAX (5, !);
 
       /* Check small positive op */
       mpfr_set_str1 (x, "1@-1");
-      if (!mpfr_fits_ulong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (19);
-      if (!mpfr_fits_slong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (20);
-      if (!mpfr_fits_uint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (21);
-      if (!mpfr_fits_sint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (22);
-      if (!mpfr_fits_ushort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (23);
-      if (!mpfr_fits_sshort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (24);
+      CHECK_MAX (6, !);
 
       /* Check 17 */
       mpfr_set_ui (x, 17, MPFR_RNDN);
-      if (!mpfr_fits_ulong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (25);
-      if (!mpfr_fits_slong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (26);
-      if (!mpfr_fits_uint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (27);
-      if (!mpfr_fits_sint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (28);
-      if (!mpfr_fits_ushort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (29);
-      if (!mpfr_fits_sshort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (30);
-
-      /* Check all other values */
-      mpfr_set_ui (x, ULONG_MAX, MPFR_RNDN);
-      mpfr_mul_2exp (x, x, 1, MPFR_RNDN);
-      if (mpfr_fits_ulong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (31);
-      if (mpfr_fits_slong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (32);
-      mpfr_mul_2exp (x, x, 40, MPFR_RNDN);
-      if (mpfr_fits_ulong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (33);
-      if (mpfr_fits_uint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (34);
-      if (mpfr_fits_sint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (35);
-      if (mpfr_fits_ushort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (36);
-      if (mpfr_fits_sshort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (37);
-
-      mpfr_set_ui (x, ULONG_MAX, MPFR_RNDN);
-      if (!mpfr_fits_ulong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (38);
-      mpfr_set_ui (x, LONG_MAX, MPFR_RNDN);
-      if (!mpfr_fits_slong_p (x, (mpfr_rnd_t) r))
-        ERROR1 (39);
-      mpfr_set_ui (x, UINT_MAX, MPFR_RNDN);
-      if (!mpfr_fits_uint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (40);
-      mpfr_set_ui (x, INT_MAX, MPFR_RNDN);
-      if (!mpfr_fits_sint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (41);
-      mpfr_set_ui (x, USHRT_MAX, MPFR_RNDN);
-      if (!mpfr_fits_ushort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (42);
-      mpfr_set_ui (x, SHRT_MAX, MPFR_RNDN);
-      if (!mpfr_fits_sshort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (43);
-
-      mpfr_set_si (x, 1, MPFR_RNDN);
-      if (!mpfr_fits_sint_p (x, (mpfr_rnd_t) r))
-        ERROR1 (44);
-      if (!mpfr_fits_sshort_p (x, (mpfr_rnd_t) r))
-        ERROR1 (45);
-
-      /* Check negative op */
-      for (i = 1; i <= 4; i++)
-        {
-          int inv;
-
-          mpfr_set_si_2exp (x, -i, -2, MPFR_RNDN);
-          mpfr_rint (y, x, (mpfr_rnd_t) r);
-          inv = MPFR_NOTZERO (y);
-          if (!mpfr_fits_ulong_p (x, (mpfr_rnd_t) r) ^ inv)
-            ERROR1 (46);
-          if (!mpfr_fits_slong_p (x, (mpfr_rnd_t) r))
-            ERROR1 (47);
-          if (!mpfr_fits_uint_p (x, (mpfr_rnd_t) r) ^ inv)
-            ERROR1 (48);
-          if (!mpfr_fits_sint_p (x, (mpfr_rnd_t) r))
-            ERROR1 (49);
-          if (!mpfr_fits_ushort_p (x, (mpfr_rnd_t) r) ^ inv)
-            ERROR1 (50);
-          if (!mpfr_fits_sshort_p (x, (mpfr_rnd_t) r))
-            ERROR1 (51);
-        }
-    }
-
-  mpfr_clear (x);
-  mpfr_clear (y);
-
-  check_intmax ();
-
-  tests_end_mpfr ();
-  return 0;
-}
-
-static void
-check_intmax (void)
-{
-#ifdef _MPFR_H_HAVE_INTMAX_T
-  mpfr_t x, y;
-  int i, r;
-
-  mpfr_init2 (x, sizeof (uintmax_t) * CHAR_BIT);
-  mpfr_init2 (y, 8);
-
-  RND_LOOP (r)
-    {
-      /* Check NAN */
-      mpfr_set_nan (x);
-      if (mpfr_fits_uintmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (52);
-      if (mpfr_fits_intmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (53);
-
-      /* Check INF */
-      mpfr_set_inf (x, 1);
-      if (mpfr_fits_uintmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (54);
-      if (mpfr_fits_intmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (55);
-
-      /* Check Zero */
-      MPFR_SET_ZERO (x);
-      if (!mpfr_fits_uintmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (56);
-      if (!mpfr_fits_intmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (57);
-
-      /* Check positive small op */
-      mpfr_set_str1 (x, "1@-1");
-      if (!mpfr_fits_uintmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (58);
-      if (!mpfr_fits_intmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (59);
-
-      /* Check 17 */
-      mpfr_set_ui (x, 17, MPFR_RNDN);
-      if (!mpfr_fits_uintmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (60);
-      if (!mpfr_fits_intmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (61);
+      CHECK_MAX (7, !);
 
       /* Check hugest */
       mpfr_set_ui_2exp (x, 42, sizeof (uintmax_t) * 32, MPFR_RNDN);
-      if (mpfr_fits_uintmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (62);
-      if (mpfr_fits_intmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (63);
+      CHECK_MAX (8, !!);
 
-      /* Check all other values */
-      mpfr_set_uj (x, MPFR_UINTMAX_MAX, MPFR_RNDN);
-      mpfr_add_ui (x, x, 1, MPFR_RNDN);
-      if (mpfr_fits_uintmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (64);
-      mpfr_set_uj (x, MPFR_UINTMAX_MAX, MPFR_RNDN);
-      if (!mpfr_fits_uintmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (65);
-      mpfr_set_sj (x, MPFR_INTMAX_MAX, MPFR_RNDN);
-      mpfr_add_ui (x, x, 1, MPFR_RNDN);
-      if (mpfr_fits_intmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (66);
-      mpfr_set_sj (x, MPFR_INTMAX_MAX, MPFR_RNDN);
-      if (!mpfr_fits_intmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (67);
-      mpfr_set_sj (x, MPFR_INTMAX_MIN, MPFR_RNDN);
-      if (!mpfr_fits_intmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (68);
-      mpfr_sub_ui (x, x, 1, MPFR_RNDN);
-      if (mpfr_fits_intmax_p (x, (mpfr_rnd_t) r))
-        ERROR1 (69);
+      /* Check a non-integer number just below a power of two. */
+      mpfr_set_ui_2exp (x, 255, -2, MPFR_RNDN);
+      CHECK_MAX (10, !);
+
+      /* Check the limits of the types (except 0 for uintmax_t) */
+      CHECK_LIM (20, MPFR_UINTMAX_MAX, mpfr_set_uj, mpfr_fits_uintmax_p);
+      CHECK_LIM (30, MPFR_INTMAX_MAX, mpfr_set_sj, mpfr_fits_intmax_p);
+      CHECK_LIM (35, MPFR_INTMAX_MIN, mpfr_set_sj, mpfr_fits_intmax_p);
 
       /* Check negative op */
       for (i = 1; i <= 4; i++)
@@ -294,14 +261,16 @@ check_intmax (void)
           mpfr_set_si_2exp (x, -i, -2, MPFR_RNDN);
           mpfr_rint (y, x, (mpfr_rnd_t) r);
           inv = MPFR_NOTZERO (y);
-          if (!mpfr_fits_uintmax_p (x, (mpfr_rnd_t) r) ^ inv)
-            ERROR1 (70);
-          if (!mpfr_fits_intmax_p (x, (mpfr_rnd_t) r))
-            ERROR1 (71);
+          FTEST (80, inv ^ !, mpfr_fits_uintmax_p);
+          FTEST (81,       !, mpfr_fits_intmax_p);
         }
     }
 
+#endif  /* _MPFR_H_HAVE_INTMAX_T */
+
   mpfr_clear (x);
   mpfr_clear (y);
-#endif
+
+  tests_end_mpfr ();
+  return 0;
 }

@@ -1,7 +1,7 @@
 /* Test file for mpfr_get_flt and mpfr_set_flt
 
-Copyright 2009-2015 Free Software Foundation, Inc.
-Contributed by the AriC and Caramel projects, INRIA.
+Copyright 2009-2016 Free Software Foundation, Inc.
+Contributed by the AriC and Caramba projects, INRIA.
 
 This file is part of the GNU MPFR Library.
 
@@ -54,9 +54,10 @@ main (void)
 #if !defined(MPFR_ERRDIVZERO)
   mpfr_set_nan (x);
   f = mpfr_get_flt (x, MPFR_RNDN);
-  if (f == f)
+  if (! DOUBLE_ISNAN (f))
     {
       printf ("Error for mpfr_get_flt(NaN)\n");
+      printf ("got f=%f\n", f);
       exit (1);
     }
   mpfr_set_flt (x, f, MPFR_RNDN);
@@ -185,6 +186,7 @@ main (void)
       mpfr_mul_2exp (x, x, 1, MPFR_RNDN);
     }
 
+#ifdef HAVE_DENORMS
   mpfr_set_si_2exp (x, 1, -150, MPFR_RNDN);
   g = 0.0;
   f = mpfr_get_flt (x, MPFR_RNDN);
@@ -300,6 +302,7 @@ main (void)
       printf ("expected %.8e, got %.8e\n", g, f);
       exit (1);
     }
+#endif
 
   mpfr_set_si_2exp (x, 1, 128, MPFR_RNDN);
   g = FLT_MAX;

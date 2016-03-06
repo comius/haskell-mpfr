@@ -1,9 +1,9 @@
 This is mpfr.info, produced by makeinfo version 6.0 from mpfr.texi.
 
 This manual documents how to install and use the Multiple Precision
-Floating-Point Reliable Library, version 3.1.3.
+Floating-Point Reliable Library, version 3.1.4.
 
-   Copyright 1991, 1993-2015 Free Software Foundation, Inc.
+   Copyright 1991, 1993-2016 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2 or
@@ -23,9 +23,9 @@ GNU MPFR
 ********
 
 This manual documents how to install and use the Multiple Precision
-Floating-Point Reliable Library, version 3.1.3.
+Floating-Point Reliable Library, version 3.1.4.
 
-   Copyright 1991, 1993-2015 Free Software Foundation, Inc.
+   Copyright 1991, 1993-2016 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2 or
@@ -272,12 +272,12 @@ There are some other useful make targets:
 In case of problem, please read the ‘INSTALL’ file carefully before
 reporting a bug, in particular section “In case of problem”.  Some
 problems are due to bad configuration on the user side (not specific to
-MPFR). Problems are also mentioned in the FAQ
+MPFR).  Problems are also mentioned in the FAQ
 <http://www.mpfr.org/faq.html>.
 
    Please report problems to the MPFR mailing-list ‘mpfr@inria.fr’.
-*Note Reporting Bugs::.  Some bug fixes are available on the MPFR 3.1.3
-web page <http://www.mpfr.org/mpfr-3.1.3/>.
+*Note Reporting Bugs::.  Some bug fixes are available on the MPFR 3.1.4
+web page <http://www.mpfr.org/mpfr-3.1.4/>.
 
 2.4 Getting the Latest Version of MPFR
 ======================================
@@ -292,7 +292,7 @@ File: mpfr.info,  Node: Reporting Bugs,  Next: MPFR Basics,  Prev: Installing MP
 ****************
 
 If you think you have found a bug in the MPFR library, first have a look
-on the MPFR 3.1.3 web page <http://www.mpfr.org/mpfr-3.1.3/> and the FAQ
+on the MPFR 3.1.4 web page <http://www.mpfr.org/mpfr-3.1.4/> and the FAQ
 <http://www.mpfr.org/faq.html>: perhaps this bug is already known, in
 which case you may find there a workaround for it.  You might also look
 in the archives of the MPFR mailing-list:
@@ -306,7 +306,7 @@ report together.
 
    You have to send us a test case that makes it possible for us to
 reproduce the bug, i.e., a small self-content program, using no other
-library than MPFR. Include instructions on how to run the test case.
+library than MPFR.  Include instructions on how to run the test case.
 
    You also have to explain what is wrong; if you get a crash, or if the
 results you get are incorrect and in that case, in what way.
@@ -402,7 +402,7 @@ libraries.  On a typical Unix-like system this can be done with ‘-lmpfr
      gcc myprogram.c -lmpfr -lgmp
 
    MPFR is built using Libtool and an application can use that to link
-if desired, *note GNU Libtool: (libtool.info)Top.
+if desired, *note GNU Libtool: (libtool)Top.
 
    If MPFR has been installed to a non-standard location, then it may be
 necessary to set up environment variables such as ‘C_INCLUDE_PATH’ and
@@ -429,7 +429,7 @@ an invalid operation (like 0 divided by 0), or a value that cannot be
 determined (like +Infinity minus +Infinity).  Moreover, like in the IEEE
 754 standard, zero is signed, i.e., there are both +0 and −0; the
 behavior is the same as in the IEEE 754 standard and it is generalized
-to the other functions supported by MPFR. Unless documented otherwise,
+to the other functions supported by MPFR.  Unless documented otherwise,
 the sign bit of a NaN is unspecified.
 
 The “precision” is the number of bits used to represent the significand
@@ -586,7 +586,7 @@ description of the MPFR function; for example ‘mpfr_max’ on −0 and +0
 gives +0.
 
    When the input point is not in the closure of the domain of the
-function, the result is NaN. Example: ‘mpfr_sqrt’ on −17 gives NaN.
+function, the result is NaN.  Example: ‘mpfr_sqrt’ on −17 gives NaN.
 
    When an input argument is NaN, the result is NaN, possibly except
 when a partial function is constant on the finite floating-point
@@ -680,7 +680,7 @@ memory leaks being reported).
    MPFR internal data such as flags, the exponent range, the default
 precision and rounding mode, and caches (i.e., data that are not
 accessed via parameters) are either global (if MPFR has not been
-compiled as thread safe) or per-thread (thread local storage, TLS). The
+compiled as thread safe) or per-thread (thread local storage, TLS).  The
 initial values of TLS data after a thread is created entirely depend on
 the compiler and thread implementation (MPFR simply does a conventional
 variable initialization, the variables being declared with an
@@ -752,7 +752,7 @@ purpose.
 
  -- Function: void mpfr_init2 (mpfr_t X, mpfr_prec_t PREC)
      Initialize X, set its precision to be *exactly* PREC bits and its
-     value to NaN. (Warning: the corresponding MPF function initializes
+     value to NaN.  (Warning: the corresponding MPF function initializes
      to zero instead.)
 
      Normally, a variable should be initialized once only or at least be
@@ -765,7 +765,7 @@ purpose.
  -- Function: void mpfr_inits2 (mpfr_prec_t PREC, mpfr_t X, ...)
      Initialize all the ‘mpfr_t’ variables of the given variable
      argument ‘va_list’, set their precision to be *exactly* PREC bits
-     and their value to NaN. See ‘mpfr_init2’ for more details.  The
+     and their value to NaN.  See ‘mpfr_init2’ for more details.  The
      ‘va_list’ is assumed to be composed only of type ‘mpfr_t’ (or
      equivalently ‘mpfr_ptr’).  It begins from X, and ends when it
      encounters a null pointer (whose type must also be ‘mpfr_ptr’).
@@ -795,8 +795,8 @@ purpose.
 
  -- Function: void mpfr_init (mpfr_t X)
      Initialize X, set its precision to the default precision, and set
-     its value to NaN. The default precision can be changed by a call to
-     ‘mpfr_set_default_prec’.
+     its value to NaN.  The default precision can be changed by a call
+     to ‘mpfr_set_default_prec’.
 
      Warning!  In a given program, some other libraries might change the
      default precision and not restore it.  Thus it is safer to use
@@ -817,7 +817,7 @@ purpose.
  -- Macro: MPFR_DECL_INIT (NAME, PREC)
      This macro declares NAME as an automatic variable of type ‘mpfr_t’,
      initializes it and sets its precision to be *exactly* PREC bits and
-     its value to NaN. NAME must be a valid identifier.  You must use
+     its value to NaN.  NAME must be a valid identifier.  You must use
      this macro in the declaration section.  This macro is much faster
      than using ‘mpfr_init2’ but has some drawbacks:
 
@@ -877,7 +877,7 @@ numbers.
 
  -- Function: void mpfr_set_prec (mpfr_t X, mpfr_prec_t PREC)
      Reset the precision of X to be *exactly* PREC bits, and set its
-     value to NaN. The previous value stored in X is lost.  It is
+     value to NaN.  The previous value stored in X is lost.  It is
      equivalent to a call to ‘mpfr_clear(x)’ followed by a call to
      ‘mpfr_init2(x, prec)’, but more efficient as no allocation is done
      in case the current allocated space for the significand of X is
@@ -1032,7 +1032,7 @@ Initialization Functions::).
      insensitive.  A ‘n-char-sequence-opt’ is a possibly empty string
      containing only digits, Latin letters and the underscore (0, 1, 2,
      …, 9, a, b, …, z, A, B, …, Z, _).  Note: one has an optional sign
-     for all data, even NaN. For example, ‘-@nAn@(This_Is_Not_17)’ is a
+     for all data, even NaN.  For example, ‘-@nAn@(This_Is_Not_17)’ is a
      valid representation for NaN in base 17.
 
  -- Function: void mpfr_set_nan (mpfr_t X)
@@ -1157,7 +1157,7 @@ File: mpfr.info,  Node: Conversion Functions,  Next: Basic Arithmetic Functions,
  -- Function: int mpfr_get_f (mpf_t ROP, mpfr_t OP, mpfr_rnd_t RND)
      Convert OP to a ‘mpf_t’, after rounding it with respect to RND.
      The _erange_ flag is set if OP is NaN or an infinity, which do not
-     exist in MPF. If OP is NaN, then ROP is undefined.  If OP is +Inf
+     exist in MPF.  If OP is NaN, then ROP is undefined.  If OP is +Inf
      (resp. −Inf), then ROP is set to the maximum (resp. minimum) value
      in the precision of the MPF number; if a future MPF version
      supports infinities, this behavior will be considered incorrect and
@@ -1356,8 +1356,8 @@ File: mpfr.info,  Node: Basic Arithmetic Functions,  Next: Comparison Functions,
           mpfr_rnd_t RND)
      Set ROP to the cubic root (resp. the Kth root) of OP rounded in the
      direction RND.  For K odd (resp. even) and OP negative (including
-     −Inf), set ROP to a negative number (resp. NaN). The Kth root of −0
-     is defined to be −0, whatever the parity of K.
+     −Inf), set ROP to a negative number (resp. NaN).  The Kth root of
+     −0 is defined to be −0, whatever the parity of K.
 
  -- Function: int mpfr_pow (mpfr_t ROP, mpfr_t OP1, mpfr_t OP2,
           mpfr_rnd_t RND)
@@ -1453,7 +1453,7 @@ File: mpfr.info,  Node: Comparison Functions,  Next: Special Functions,  Prev: B
      possible cases.  If you need to distinguish two cases only, it is
      recommended to use the predicate functions (e.g., ‘mpfr_equal_p’
      for the equality) described below; they behave like the IEEE 754
-     comparisons, in particular when one or both arguments are NaN. But
+     comparisons, in particular when one or both arguments are NaN.  But
      only floating-point numbers can be compared (you may need to do a
      conversion first).
 
@@ -1697,7 +1697,7 @@ argument.
           RND)
      Set ROP to the value of the first kind Bessel function of order 0,
      (resp. 1 and N) on OP, rounded in the direction RND.  When OP is
-     NaN, ROP is always set to NaN. When OP is plus or minus Infinity,
+     NaN, ROP is always set to NaN.  When OP is plus or minus Infinity,
      ROP is set to +0.  When OP is zero, and N is not zero, ROP is set
      to +0 or −0 depending on the parity and sign of N, and the sign of
      OP.
@@ -1708,7 +1708,7 @@ argument.
           RND)
      Set ROP to the value of the second kind Bessel function of order 0
      (resp. 1 and N) on OP, rounded in the direction RND.  When OP is
-     NaN or negative, ROP is always set to NaN. When OP is +Inf, ROP is
+     NaN or negative, ROP is always set to NaN.  When OP is +Inf, ROP is
      set to +0.  When OP is zero, ROP is set to +Inf or −Inf depending
      on the parity and sign of N.
 
@@ -1741,7 +1741,7 @@ argument.
 
  -- Function: int mpfr_ai (mpfr_t ROP, mpfr_t X, mpfr_rnd_t RND)
      Set ROP to the value of the Airy function Ai on X, rounded in the
-     direction RND.  When X is NaN, ROP is always set to NaN. When X is
+     direction RND.  When X is NaN, ROP is always set to NaN.  When X is
      +Inf or −Inf, ROP is +0.  The current implementation is not
      intended to be used with large arguments.  It works with abs(X)
      typically smaller than 500.  For larger arguments, other methods
@@ -2126,7 +2126,7 @@ File: mpfr.info,  Node: Integer Related Functions,  Next: Rounding Related Funct
      ‘mpfr_remquo’.
 
      Special values are handled as described in Section F.9.7.1 of the
-     ISO C99 standard: If X is infinite or Y is zero, R is NaN. If Y is
+     ISO C99 standard: If X is infinite or Y is zero, R is NaN.  If Y is
      infinite and X is finite, R is X rounded to the precision of R.  If
      R is zero, it has the sign of X.  The return value is the ternary
      value corresponding to R.
@@ -2226,7 +2226,7 @@ File: mpfr.info,  Node: Miscellaneous Functions,  Next: Exception Related Functi
 ============================
 
  -- Function: void mpfr_nexttoward (mpfr_t X, mpfr_t Y)
-     If X or Y is NaN, set X to NaN. If X and Y are equal, X is
+     If X or Y is NaN, set X to NaN.  If X and Y are equal, X is
      unchanged.  Otherwise, if X is different from Y, replace X by the
      next floating-point number (with the precision of X and the current
      exponent range) in the direction of Y (the infinite values are seen
@@ -2244,7 +2244,7 @@ File: mpfr.info,  Node: Miscellaneous Functions,  Next: Exception Related Functi
  -- Function: int mpfr_max (mpfr_t ROP, mpfr_t OP1, mpfr_t OP2,
           mpfr_rnd_t RND)
      Set ROP to the minimum (resp. maximum) of OP1 and OP2.  If OP1 and
-     OP2 are both NaN, then ROP is set to NaN. If OP1 or OP2 is NaN,
+     OP2 are both NaN, then ROP is set to NaN.  If OP1 or OP2 is NaN,
      then ROP is set to the numeric value.  If OP1 and OP2 are zeros of
      different signs, then ROP is set to −0 (resp. +0).
 
@@ -2332,7 +2332,7 @@ File: mpfr.info,  Node: Miscellaneous Functions,  Next: Exception Related Functi
           mpfr_rnd_t RND)
      Set the value of ROP from OP1, rounded toward the given direction
      RND, then set its sign bit to that of OP2 (even when OP1 or OP2 is
-     a NaN). This function is equivalent to ‘mpfr_setsign (ROP, OP1,
+     a NaN).  This function is equivalent to ‘mpfr_setsign (ROP, OP1,
      mpfr_signbit (OP2), RND)’.
 
  -- Function: const char * mpfr_get_version (void)
@@ -2545,7 +2545,7 @@ File: mpfr.info,  Node: Compatibility with MPF,  Next: Custom Interface,  Prev: 
 ===========================
 
 A header file ‘mpf2mpfr.h’ is included in the distribution of MPFR for
-compatibility with the GNU MP class MPF. By inserting the following two
+compatibility with the GNU MP class MPF.  By inserting the following two
 lines after the ‘#include <gmp.h>’ line,
      #include <mpfr.h>
      #include <mpf2mpfr.h>
@@ -2745,7 +2745,7 @@ not mentioned, please send us a bug report (*note Reporting Bugs::).
 
    However, a program written for the current MPFR version (as
 documented by this manual) may not necessarily work with previous
-versions of MPFR. This section should help developers to write portable
+versions of MPFR.  This section should help developers to write portable
 code.
 
    Note: Information given here may be incomplete.  API changes are also
@@ -2947,7 +2947,7 @@ against another MPFR version (older or newer), as described below.
      Hence the change in MPFR 2.3.2.
 
    • ‘mpfr_get_f’ changed in MPFR 3.0.  This function was returning
-     zero, except for NaN and Inf, which do not exist in MPF. The
+     zero, except for NaN and Inf, which do not exist in MPF.  The
      _erange_ flag is now set in these cases, and ‘mpfr_get_f’ now
      returns the usual ternary value.
 
@@ -3091,16 +3091,16 @@ portability of MPFR in 2002-2004.
    The development of the MPFR library would not have been possible
 without the continuous support of INRIA, and of the LORIA (Nancy,
 France) and LIP (Lyon, France) laboratories.  In particular the main
-authors were or are members of the PolKA, Spaces, Cacao and Caramel
-project-teams at LORIA and of the Arénaire and AriC project-teams at
-LIP. This project was started during the Fiable (reliable in French)
-action supported by INRIA, and continued during the AOC action.  The
-development of MPFR was also supported by a grant (202F0659 00 MPN 121)
-from the Conseil Régional de Lorraine in 2002, from INRIA by an
-"associate engineer" grant (2003-2005), an "opération de développement
-logiciel" grant (2007-2009), and the post-doctoral grant of Sylvain
-Chevillard in 2009-2010.  The MPFR-MPC workshop in June 2012 was partly
-supported by the ERC grant ANTICS of Andreas Enge.
+authors were or are members of the PolKA, Spaces, Cacao, Caramel and
+Caramba project-teams at LORIA and of the Arénaire and AriC
+project-teams at LIP.  This project was started during the Fiable
+(reliable in French) action supported by INRIA, and continued during the
+AOC action.  The development of MPFR was also supported by a grant
+(202F0659 00 MPN 121) from the Conseil Régional de Lorraine in 2002,
+from INRIA by an "associate engineer" grant (2003-2005), an "opération
+de développement logiciel" grant (2007-2009), and the post-doctoral
+grant of Sylvain Chevillard in 2009-2010.  The MPFR-MPC workshop in June
+2012 was partly supported by the ERC grant ANTICS of Andreas Enge.
 
 
 File: mpfr.info,  Node: References,  Next: GNU Free Documentation License,  Prev: Contributors,  Up: Top
@@ -4216,44 +4216,44 @@ Node: Top775
 Node: Copying2007
 Node: Introduction to MPFR3770
 Node: Installing MPFR5884
-Node: Reporting Bugs11327
-Node: MPFR Basics13357
-Node: Headers and Libraries13673
-Node: Nomenclature and Types16832
-Node: MPFR Variable Conventions18894
-Node: Rounding Modes20438
-Ref: ternary value21568
-Node: Floating-Point Values on Special Numbers23554
-Node: Exceptions26813
-Node: Memory Handling29990
+Node: Reporting Bugs11328
+Node: MPFR Basics13359
+Node: Headers and Libraries13675
+Node: Nomenclature and Types16829
+Node: MPFR Variable Conventions18892
+Node: Rounding Modes20436
+Ref: ternary value21566
+Node: Floating-Point Values on Special Numbers23552
+Node: Exceptions26812
+Node: Memory Handling29989
 Node: MPFR Interface31135
 Node: Initialization Functions33249
-Node: Assignment Functions40559
-Node: Combined Initialization and Assignment Functions49914
-Node: Conversion Functions51215
-Node: Basic Arithmetic Functions60276
-Node: Comparison Functions69777
-Node: Special Functions73264
-Node: Input and Output Functions87862
-Node: Formatted Output Functions89834
-Node: Integer Related Functions99621
-Node: Rounding Related Functions106241
-Node: Miscellaneous Functions110078
-Node: Exception Related Functions118758
-Node: Compatibility with MPF125576
-Node: Custom Interface128317
-Node: Internals132716
-Node: API Compatibility134260
-Node: Type and Macro Changes136189
-Node: Added Functions139038
-Node: Changed Functions142326
-Node: Removed Functions146739
-Node: Other Changes147167
-Node: Contributors148770
-Node: References151413
-Node: GNU Free Documentation License153167
-Node: Concept Index175760
-Node: Function and Type Index181857
+Node: Assignment Functions40564
+Node: Combined Initialization and Assignment Functions49920
+Node: Conversion Functions51221
+Node: Basic Arithmetic Functions60283
+Node: Comparison Functions69785
+Node: Special Functions73273
+Node: Input and Output Functions87874
+Node: Formatted Output Functions89846
+Node: Integer Related Functions99633
+Node: Rounding Related Functions106254
+Node: Miscellaneous Functions110091
+Node: Exception Related Functions118774
+Node: Compatibility with MPF125592
+Node: Custom Interface128334
+Node: Internals132733
+Node: API Compatibility134277
+Node: Type and Macro Changes136207
+Node: Added Functions139056
+Node: Changed Functions142344
+Node: Removed Functions146758
+Node: Other Changes147186
+Node: Contributors148789
+Node: References151442
+Node: GNU Free Documentation License153196
+Node: Concept Index175789
+Node: Function and Type Index181886
 
 End Tag Table
 

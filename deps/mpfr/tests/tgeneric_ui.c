@@ -1,7 +1,7 @@
 /* Generic test file for functions with one mpfr_t argument and an integer.
 
-Copyright 2005-2015 Free Software Foundation, Inc.
-Contributed by the AriC and Caramel projects, INRIA.
+Copyright 2005-2016 Free Software Foundation, Inc.
+Contributed by the AriC and Caramba projects, INRIA.
 
 This file is part of the GNU MPFR Library.
 
@@ -64,7 +64,16 @@ test_generic_ui (mpfr_prec_t p0, mpfr_prec_t p1, unsigned int N)
               mpfr_set_si (x, n == 0 ? 1 : -1, MPFR_RNDN);
               mpfr_set_exp (x, mpfr_get_emin ());
             }
-          u = INT_RAND_FUNCTION ();
+          if (n < 2 || n > 3 || prec < p1)
+            u = INT_RAND_FUNCTION ();
+          else
+            {
+              /* Special cases tested in precision p1 if n = 2 or 3. */
+              if ((INTEGER_TYPE) -1 < 0)  /* signed, type long assumed */
+                u = n == 2 ? LONG_MIN : LONG_MAX;
+              else  /* unsigned */
+                u = n == 2 ? 0 : -1;
+            }
           rnd = RND_RAND ();
           mpfr_set_prec (y, yprec);
           compare = TEST_FUNCTION (y, x, u, rnd);

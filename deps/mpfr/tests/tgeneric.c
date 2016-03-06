@@ -1,8 +1,8 @@
 /* Generic test file for functions with one or two arguments (the second being
    either mpfr_t or double or unsigned long).
 
-Copyright 2001-2015 Free Software Foundation, Inc.
-Contributed by the AriC and Caramel projects, INRIA.
+Copyright 2001-2016 Free Software Foundation, Inc.
+Contributed by the AriC and Caramba projects, INRIA.
 
 This file is part of the GNU MPFR Library.
 
@@ -176,7 +176,12 @@ test_generic (mpfr_prec_t p0, mpfr_prec_t p1, unsigned int nmax)
           xprec = prec;
           if (randlimb () & 1)
             {
-              xprec *= (double) randlimb () / MP_LIMB_T_MAX;
+              /* In half cases, modify the precision of the inputs:
+                 If the base precision (for the result) is small,
+                 take a larger input precision in general, else
+                 take a smaller precision. */
+              xprec *= (prec < 16 ? 256.0 : 1.0) *
+                (double) randlimb () / MP_LIMB_T_MAX;
               if (xprec < MPFR_PREC_MIN)
                 xprec = MPFR_PREC_MIN;
             }
