@@ -127,26 +127,26 @@ readRounded  r p (I# i) str = [(Rounded s e l, unpackCString# a)] where
 set :: RoundMode -> Precision -> Rounded -> Rounded
 set = unary mpfrFromMpfr#
 
-{-| Positive infinity. -}
+{-| Returns positive infinity. -}
 posInf :: Rounded
 posInf = Rounded s (-0x8000000000000000# +# 3#) l
   where  (!Rounded s _ l) = zero
 
-{-| Negative infinity. -}
+{-| Returns negative infinity. -}
 negInf :: Rounded
 negInf = Rounded s (-0x8000000000000000# +# 3#) l
   where (!Rounded s _ l) = fromInt Near 2 (-1)
 
-{-| Not a number. -}
+{-| Returns NaN (Not-a-Number). The sign bit of the result is unspecified. -}
 nan :: Rounded
 nan = Rounded s (-0x8000000000000000# +# 2#) l
   where (!Rounded s _ l) = zero
 
-{-| Positive zero. -}
+{-| Returns positive zero. -}
 zero :: Rounded
 zero = fromInt Near 2 0
 
-{-| Negative zero. -}
+{-| Returns negative zero. -}
 negZero :: Rounded
 negZero = neg Down 2 zero
 
@@ -210,6 +210,10 @@ toWord :: RoundMode -> Rounded -> GHC.Types.Word
 foreign import prim "mpfr_cmm_get_z_2exp" mpfrDecode#
   :: CSignPrec# -> CExp# -> ByteArray# -> (# CExp#, Int#, ByteArray# #)
 
+{-|Returns __/the scaled significand of @op@/__ (regarded as an integer, with the precision of op) __/and the exponent @exp@/__ (which may be outside the current exponent range) such that 
+  __/@op@ exactly equals return value times 2 raised to the power @exp@/__. If op is zero, the minimal exponent emin is returned. If op is NaN or an infinity, the erange flag is set, 0 and the minimal exponent 
+  emin is returned. The returned exponent may be less than the minimal exponent emin of MPFR numbers in the current exponent range; in case the exponent is not representable in the mpfr_exp_t type, 
+  the erange flag is set and the minimal value of the mpfr_exp_t type is returned. -}
 toInteger2Exp :: Rounded -> (Integer, Int)
 toInteger2Exp (Rounded sp e l) = case mpfrDecode# sp e l of (# i, s, d #) -> (J# s d, I# i)
 
@@ -229,10 +233,15 @@ foreign import prim "mpfr_cmm_get_d_2exp" mpfrGetDouble2Exp#
       CSignPrec# -> CExp# -> ByteArray# ->
       (# Double#, Int# #)
 
+{-|Convert op to a double using the RoundMode. If op is NaN, some fixed NaN (either quiet or signaling) or the result of 0.0/0.0 is returned. If op is ±Inf, an infinity of the same sign or 
+  the result of ±1.0/0.0 is returned. If op is zero, these functions return a zero, trying to preserve its sign, if possible. -}
 toDoubleA :: RoundMode -> Rounded -> Double
 toDoubleA r (Rounded sp e l) =
     let d = mpfrGetDouble# (mode# r) sp e l in D# d
 
+{-| Returns d and exp such that 0.5<=abs(d)<1 and d times 2 raised to exp equals op rounded to double precision, using the RoundMode. If op is zero, then a zero of the same sign 
+  (or an unsigned zero, if the implementation does not have signed zeros) is returned, and exp is set to 0. If op is NaN or an infinity, then the corresponding double precision value is returned, 
+  and exp is undefined. -}
 toDouble2Exp :: RoundMode -> Rounded -> (Double, Int)
 toDouble2Exp r (Rounded sp e l) = (D# d, I# ex)
     where (# d, ex #) = mpfrGetDouble2Exp# (mode# r) sp e l
@@ -249,15 +258,28 @@ mpfrASPrintf :: Addr# -> Int -> RoundMode -> Rounded -> String
 mpfrASPrintf f (I# p) r (Rounded s e l) = unpackCString# (byteArrayContents# str) where
    str = mpfrASPrintf# f p (mode# r) s e l
 
+{-| Returns a decimal string representation of op. The number is displayed with enough digits so that it can be read back exactly, assuming that the input and output variables have 
+  the same precision and that the input and output rounding modes are both rounding to nearest. -}
 toStringReadback ::  Rounded -> String
 toStringReadback (Rounded s e l) = unpackCString# (byteArrayContents# str) where
    str = mpfrReadback# s e l
 
+
 toStringHex, toStringBin, toStringSci, toStringFix, toString :: RoundMode -> Int -> Rounded -> String
+
+{-| Returns a hex (C99 style) string representation of op, using RoundMode and given number of digits. -}
 toStringHex  r p d = mpfrASPrintf "%.*R*a"# p r d
+
+{-| Returns binary string representation of op, using RoundMode and given number of digits. -}
 toStringBin r p d = mpfrASPrintf "%.*R*b"# p r d
+
+{-| Returns scientific format string representation of op, using RoundMode and given number of digits. -}
 toStringSci r p d = mpfrASPrintf "%.*R*e"# p r d
+
+{-| Returns fixed point string representation of op, using RoundMode and given number of digits. -}
 toStringFix r p d = mpfrASPrintf "%.*R*f"# p r d
+
+{-| Returns fixed or scientific float -}
 toString r p d = mpfrASPrintf "%.*R*g"# p r d
 
 foreign import prim "mpfr_cmm_get_str" mpfrGetStr#
@@ -265,8 +287,23 @@ foreign import prim "mpfr_cmm_get_str" mpfrGetStr#
      CSignPrec# -> CExp# -> ByteArray# ->
      (# Int#, ByteArray# #)
 
+{-| Convert op to a string of digits in base b and exponent, with rounding in the direction RoundMode.  
+   
+   If the input number is not an ordinary number, the returned exponent is 0 (for input 0, the current minimal exponent is written).
 
-toRawStringExp :: RoundMode -> Int -> Int -> Rounded -> (String, Exp)
+    The generated string is a fraction, with an implicit radix point immediately to the left of the first digit. For example, the number -3.1416 would be returned as ("-31416",1).
+    If rnd is to nearest, and op is exactly in the middle of two consecutive possible outputs, the one with an even significand is chosen,
+    where both significands are considered with the exponent of op. Note that for an odd base, this may not correspond to an even last digit: for example with 2 digits in base 7, 
+    (14) and a half is rounded to (15) which is 12 in decimal, (16) and a half is rounded to (20) which is 14 in decimal, and (26) and a half is rounded to (26) which is 20 in decimal.
+
+    If n is zero, the number of digits of the significand is chosen large enough so that re-reading the printed value with the same precision, assuming both output and input use rounding to nearest,
+    will recover the original value of op. More precisely, in most cases, the chosen precision of str is the minimal precision m depending only on p = PREC(op) and b that satisfies the above property,
+    i.e., m = 1 + ceil(p*log(2)/log(b)), with p replaced by p-1 if b is a power of 2, but in some very rare cases, it might be m+1 (the smallest case for bases up to 62 is when p equals 186564318007
+    for bases 7 and 49). -}
+toRawStringExp :: RoundMode
+                   -> Int -- ^ n is either zero (see below) or the number of significant digits output in the string; in the latter case, n must be greater or equal to 2. 
+                   -> Int -- ^ The base b may vary from 2 to 62; otherwise the function returns ("", 0). 
+                   -> Rounded -> (String, Exp)
 toRawStringExp r (I# n) (I# d) (Rounded s e l) = (unpackCString# (byteArrayContents# str), I64# i) where
    (# i, str #) = mpfrGetStr# (mode# r) n d s e l
 
