@@ -510,23 +510,39 @@ foreign import prim "mpfr_cmm_yn" mpfrYn#
 foreign import prim "mpfr_cmm_lgamma" mpfrLGamma#
   :: CRounding# -> CPrecision# -> CSignPrec# -> CExp# -> ByteArray# -> RoundedOut_#
 
+{-| Return the factorial of @op@. -}
 facw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
 facw r p (W# x) = Rounded s' e' l' where
     (# s', e', l' #) = mpfrFac# (mode# r) (prec# p) x 
 
+{-| Return the value of the Riemann Zeta function on @op@. -}
 zetaw :: RoundMode -> Precision -> GHC.Types.Word -> Rounded
 zetaw r p (W# x) = Rounded s' e' l' where
     (# s', e', l' #) = mpfrZeta# (mode# r) (prec# p) x 
 
+{-| Return the value of the first kind Bessel function of order @n@ on @op@.
+When @op@ is NaN, NaN is always returned.
+When @op@ is plus or minus Infinity, +0 is returned.
+When @op@ is zero, and @n@ is not zero, +0 or -0 is returned depending on the parity and sign of @n@,
+and the sign of @op@. -}
 jn :: RoundMode -> Precision -> Int -> Rounded -> Rounded
 jn r p (I# x) (Rounded s e l) = Rounded s' e' l' where
     (# s', e', l' #) = mpfrJn# (mode# r) (prec# p) x s e l 
 
-
+{-| Return the value of the second kind Bessel function of order 0 on @op@.
+When @op@ is NaN or negative, NaN is returned.
+When @op@ is +Inf, +0 is returned.
+When @op@ is zero, +Inf or -Inf is returned depending on the parity and sign of @n@. -}
 yn :: RoundMode -> Precision -> Int -> Rounded -> Rounded
 yn r p (I# x) (Rounded s e l) = Rounded s' e' l' where
     (# s', e', l' #) = mpfrYn# (mode# r) (prec# p) x s e l 
 
+{-| Return the value of the logarithm of the absolute value of the Gamma function on @op@.
+ The sign (1 or -1) of Gamma(@op@) is also returned.
+When @op@ is 1 or 2, return  +0 (in all rounding modes).
+When @op@ is an infinity or a nonpositive integer, return +Inf.
+When @op@ is NaN, -Inf or a negative integer, returned sign is
+undefined, and when @op@ is ±0, returned sign is the sign of the zero. -}
 lgamma :: RoundMode -> Precision -> Rounded -> (Int32, Rounded)
 lgamma r p (Rounded s e l) = (fromIntegral (I# i), Rounded s' e' l') where
     (# s', e', l', i #) = mpfrLGamma# (mode# r) (prec# p) s e l
