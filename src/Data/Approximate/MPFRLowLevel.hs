@@ -420,10 +420,25 @@ foreign import prim "mpfr_cmm_cmpabs" mpfrCmpAbs# :: CSignPrec# -> CExp# -> Byte
 
 #include "MPFR/comparison.h"
 
+{-| Compare @op1@ and @op2@.  Return a positive value if __/@op1@ > @op2@/__, 
+    zero if __/@op1@ = @op2@/__, and a negative value if
+    __/@op1@ < @op2@/__.
+    Both @op1@ and @op2@ are considered to their full own precision,
+    which may differ.
+    If one of the operands is NaN, set the __erange__ flag and return zero.
+
+   Note: These functions may be useful to distinguish the three possible cases.
+   If you need to distinguish two cases only, it is recommended to use the
+   predicate functions (e.g., @mpfr_equal_p@ for the equality) described
+   below; they behave like the IEEE 754 comparisons, in particular when one
+   or both arguments are @NaN@. But only floating-point numbers can be compared
+   (you may need to do a conversion first). -}
 cmp :: Rounded -> Rounded -> Maybe Ordering
 cmp a b | unordered a b  = Nothing
 cmp (Rounded s e l) (Rounded s' e' l') = Just (compare (fromIntegral (I# (mpfrCmp# s e l s' e' l'))) (0 :: Int32)) 
 
+{-| Compare |@op1@| and |@op2@|.  Return a positive value if |@op1@| > |@op2@|, zero if |@op1@| = |@op2@|, and
+a negative value if |@op1@| < |@op2@|. If one of the operands is NaN, return Nothing. -}
 cmpAbs :: Rounded -> Rounded -> Maybe Ordering
 cmpAbs a b | unordered a b  = Nothing
 cmpAbs (Rounded s e l) (Rounded s' e' l') = Just (compare (fromIntegral (I# (mpfrCmpAbs# s e l s' e' l'))) (0 :: Int32)) 
@@ -444,17 +459,26 @@ instance Ord Rounded where
   max = binary mpfrMax#
 -}
 
+{-| Return true if @op@ is NaN. 
+    Return false otherwise. -}
 isNaN :: Rounded -> Bool
 isNaN (Rounded _ e _) = isTrue# (e ==# -0x8000000000000000# +# 2#)
 
+{-| Return true if @op@ is an infinity. 
+    Return false otherwise. -}
 isInfinite :: Rounded -> Bool
 isInfinite (Rounded _ e _) = isTrue# (e ==# -0x8000000000000000# +# 3#)
 
+{-| Return true if @op@ is zero. 
+    Return false otherwise. -}
 isZero :: Rounded -> Bool
 isZero (Rounded _ e _) = isTrue# (e ==# -0x8000000000000000# +# 1#)
 
 TEST(sgn#,sgn)
 
+
+{-| Return a positive value if @op@ > 0, zero if @op@ = 0, and a negative value if @op@ < 0.
+If the operand is NaN, then Nothing is returned. -}
 sgn :: Rounded -> Maybe Int
 sgn r | isNaN r = Nothing
 sgn (Rounded s e l) = Just $ I# (mpfrsgn# s e l)
