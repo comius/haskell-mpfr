@@ -593,6 +593,7 @@ inplace f (Rounded s e l) = Rounded s' e' l'
   where (# s', e', l' #) = f s e l
 {-# INLINE inplace #-}
 
+{-|Equivalent to @nextToward@ where @y@ is plus or minus infinity.-}
 nextAbove, nextBelow :: Rounded -> Rounded
 nextAbove = inplace mpfrNextAbove#
 nextBelow = inplace mpfrNextBelow#
@@ -608,12 +609,25 @@ inplace2 f (Rounded s e l) (Rounded s2 e2 l2) = Rounded s' e' l'
   where (# s', e', l' #) = f s e l s2 e2 l2
 {-# INLINE inplace2 #-}
 
+{-| If @x@ or @y@ is NaN, return to NaN. If @x@ and @y@
+are equal, return @x@. Otherwise, if @x@
+is different from @y@, return the next floating-point
+number (with the precision of @x@ and the current exponent range)
+in the direction of @y@
+(the infinite values are seen as the smallest and largest floating-point
+numbers). If the result is zero, it keeps the same sign. No underflow or
+overflow is generated. -}
 nextToward :: Rounded -> Rounded -> Rounded
 nextToward = inplace2 mpfrNextToward#
 
+{-| Return @op1@ with its sign bit set to that of @op2@ (even
+when @op1@ or @op2@ is a NaN). -}
 copySign :: Rounded -> Rounded -> Rounded
 copySign = inplace2 mpfrCopySign#
 
+{-| Return the exponent of @x@, assuming that @x@ is a non-zero ordinary
+number and the significand is considered in [1/2,1). The behavior for NaN,
+infinity or zero is undefined. -}
 getExp :: Rounded -> Exp
 getExp (Rounded _ e# _) = I64# e#
 

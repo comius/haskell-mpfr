@@ -69,7 +69,7 @@ prec_bit
   | otherwise = b63
   where b63 = bit 63
         b31 = bit 31
-
+{-| Return the precision of @x@, i.e., the number of bits used to store its significand. -}
 getPrec :: Rounded -> Precision
 getPrec (Rounded s _ _) = (I# s) .&. complement prec_bit
 
