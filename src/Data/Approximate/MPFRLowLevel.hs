@@ -217,11 +217,13 @@ foreign import prim "mpfr_cmm_get_z_2exp" mpfrDecode#
 toInteger2Exp :: Rounded -> (Integer, Int)
 toInteger2Exp (Rounded sp e l) = case mpfrDecode# sp e l of (# i, s, d #) -> (J# s d, I# i)
 
-{-| Returns rational representation. For special values the result is undefined. -}
-toRationalA :: Rounded -> Rational
+{-| Returns rational representation. For positive, negative infinity and NaN it respectively returns 1/0, -1/0 and 0/0. -}
+toRationalA :: Fractional a => Rounded -> a
 toRationalA r
+   | isNaN r  || isInfinite r  = (fromIntegral $ sign r) / 0
+   | isZero r = 0   
    | e > 0     = fromIntegral (s `shiftL` e)
-   | otherwise = s % (1 `shiftL` negate e)
+   | otherwise = (fromIntegral s) / (fromIntegral ((1::Int) `shiftL` negate e))
    where (s, e) = toInteger2Exp r
 
 foreign import prim "mpfr_cmm_get_d" mpfrGetDouble#
@@ -482,7 +484,12 @@ TEST(sgn#,sgn)
 If the operand is NaN, then Nothing is returned. -}
 sgn :: Rounded -> Maybe Int
 sgn r | isNaN r = Nothing
-sgn (Rounded s e l) = Just $ I# (mpfrsgn# s e l)
+sgn (Rounded s e l) = Just $ I# (narrow32Int# (mpfrsgn# s e l))
+
+{-| Return a positive value if @op@ > 0, zero if @op@ = 0, and a negative value if @op@ < 0.
+If the operand is NaN, then 0 is returned. -}
+sign :: Rounded -> Int
+sign (Rounded s e l) = I# (narrow32Int# (mpfrsgn# s e l))
 
 {-
 cmpd :: Rounded -> Double -> Maybe Ordering
