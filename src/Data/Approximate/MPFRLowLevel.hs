@@ -217,6 +217,7 @@ foreign import prim "mpfr_cmm_get_z_2exp" mpfrDecode#
 toInteger2Exp :: Rounded -> (Integer, Int)
 toInteger2Exp (Rounded sp e l) = case mpfrDecode# sp e l of (# i, s, d #) -> (J# s d, I# i)
 
+{-| Returns rational representation. For special values the result is undefined. -}
 toRationalA :: Rounded -> Rational
 toRationalA r
    | e > 0     = fromIntegral (s `shiftL` e)
