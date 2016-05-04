@@ -555,6 +555,21 @@ lgamma r p (Rounded s e l) = (fromIntegral (I# i), Rounded s' e' l') where
 foreign import prim "mpfr_cmm_remquo" mpfrRemquo#
   :: CRounding# -> CPrecision# -> CSignPrec# -> CExp# -> ByteArray# -> CSignPrec# -> CExp# -> ByteArray# -> RoundedOut_#
 
+{-| Return the value of @x@ - @n@@y@, rounded
+according to the direction @rnd@, where @n@ is the integer quotient
+of @x@ divided by @y@, defined as follows: @n@ is rounded
+to the nearest integer (ties rounded to even).
+
+See @fmod@ for special values.
+
+Additionally, @remquo@ returns
+the low significant bits from the quotient @n@
+(more precisely the number of bits in a @long@ minus one),
+with the sign of @x@ divided by @y@
+(except if those low bits are all zero, in which case zero is returned).
+Note that @x@ may be so large in magnitude relative to @y@ that an
+exact representation of the quotient is not practical.
+The @remainder@ and @remquo@ functions are useful for additive argument reduction. -}
 remquo :: RoundMode -> Precision -> Rounded -> Rounded -> (Int, Rounded)
 remquo r p (Rounded s e l) (Rounded s2 e2 l2) = (I# i, Rounded s' e' l') where
     (# s', e', l', i #) = mpfrRemquo# (mode# r) (prec# p) s e l s2 e2 l2
