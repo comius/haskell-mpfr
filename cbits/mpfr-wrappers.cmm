@@ -452,16 +452,20 @@ again:                                                               \
 #define MPFR_INPLACE(name,mpfr_fun)          \
 name(W_ ps, W_ exp, P_ limbs)                \
 {                                            \
-  W_ prec, ret;                              \
+  W_ prec, op1, ret;                         \
                                              \
   prec = ps & ~(1 << PREC_SHIFT);            \
                                              \
 again:                                       \
-  STK_CHK_GEN_N(SIZEOF_MPFR);                \
+  STK_CHK_GEN_N(2 * SIZEOF_MPFR);            \
   MAYBE_GC(again);                           \
                                              \
-  ret = Sp - 1 * SIZEOF_MPFR;                \
-  MPFR_REBUILD(ps, exp, limbs, ret);         \
+  op1 = Sp - 1 * SIZEOF_MPFR;                \
+  ret = Sp - 2 * SIZEOF_MPFR;                \
+                                             \
+  MPFR_REBUILD(ps, exp, limbs, op1);         \
+  ccall mpfr_init2(ret "ptr", prec);         \
+  ccall mpfr_set(ret "ptr", op1 "ptr", 0);   \
                                              \
   ccall mpfr_fun(ret "ptr");                 \
                                              \
