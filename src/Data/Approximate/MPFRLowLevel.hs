@@ -324,10 +324,15 @@ instance Show Rounded where
 
 {-| Returns __/@op1@ times 2 raised to @op2@/__. -}
 mul2i :: Rounded -> Int -> Rounded
+mul2i r@(Rounded _ (-0x7fffffffffffffff#) _) _ = r
+mul2i r@(Rounded _ (-0x7ffffffffffffffe#) _) _ = r
+mul2i r@(Rounded _ (-0x7ffffffffffffffd#) _) _ = r
 mul2i (Rounded s e l) (I# i) = Rounded s (e +# i) l
-
 {- | Returns __/@op1@ divided by 2 raised to @op2@/__. -}
 div2i :: Rounded -> Int -> Rounded
+div2i r@(Rounded _ (-0x7fffffffffffffff#) _) _ = r
+div2i r@(Rounded _ (-0x7ffffffffffffffe#) _) _ = r
+div2i r@(Rounded _ (-0x7ffffffffffffffd#) _) _ = r
 div2i (Rounded s e l) (I# i) = Rounded s (e -# i) l
 
 
