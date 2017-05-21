@@ -223,7 +223,7 @@ toRationalA r
    | isNaN r  || isInfinite r  = (fromIntegral $ sign r) / 0
    | isZero r = 0   
    | e > 0     = fromIntegral (s `shiftL` e)
-   | otherwise = (fromIntegral s) / (fromIntegral ((1::Int) `shiftL` negate e))
+   | otherwise = (fromIntegral s) / (fromIntegral ((1::Integer) `shiftL` negate e))
    where (s, e) = toInteger2Exp r
 
 foreign import prim "mpfr_cmm_get_d" mpfrGetDouble#

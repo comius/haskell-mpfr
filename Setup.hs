@@ -39,7 +39,7 @@ inDirectory dir action = do
 
 mpfrRoot = "deps/mpfr"
 getMpfrDist = do
-   canonicalizePath "./deps/mpfrBuild"
+   canonicalizePath "./deps/mpfr"
 
 pathsWithSuffix :: String -> FilePath -> IO [FilePath]
 pathsWithSuffix suffix path = do
